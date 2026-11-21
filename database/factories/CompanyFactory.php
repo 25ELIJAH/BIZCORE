@@ -16,7 +16,7 @@ class CompanyFactory extends Factory
             'address' => fake()->address(),
             'email' => fake()->companyEmail(),
             'phone' => fake()->phoneNumber(),
-            'currency' => 'USD',
+            'currency' => 'KES',
             'is_active' => true,
         ];
     }

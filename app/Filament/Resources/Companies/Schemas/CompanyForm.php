@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Companies\Schemas;
 
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
@@ -12,14 +11,6 @@ use Filament\Schemas\Schema;
 
 class CompanyForm
 {
-    /** Currencies offered when creating a company. */
-    public const CURRENCIES = [
-        'USD' => 'USD — US dollar', 'EUR' => 'EUR — Euro', 'GBP' => 'GBP — Pound sterling',
-        'KES' => 'KES — Kenyan shilling', 'TZS' => 'TZS — Tanzanian shilling', 'UGX' => 'UGX — Ugandan shilling',
-        'NGN' => 'NGN — Nigerian naira', 'GHS' => 'GHS — Ghanaian cedi', 'ZAR' => 'ZAR — South African rand',
-        'INR' => 'INR — Indian rupee', 'AED' => 'AED — UAE dirham',
-    ];
-
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -33,7 +24,8 @@ class CompanyForm
                     ->maxSize(2048)->columnSpanFull(),
             ]),
             Section::make('Business settings')->columns(2)->schema([
-                Select::make('currency')->options(self::CURRENCIES)->required()->default('USD')->searchable(),
+                TextInput::make('currency_display')->label('Currency')->default('KES — Kenyan shilling')->disabled()->dehydrated(false)
+                    ->helperText('BizCore uses Kenyan shillings for every company.'),
                 Toggle::make('is_active')->label('Active')->default(true)
                     ->helperText('Inactive companies cannot be entered by any user.'),
                 Toggle::make('settings.allow_negative_stock')->label('Allow selling beyond available stock')

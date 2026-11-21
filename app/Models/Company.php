@@ -13,6 +13,12 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        // One currency for the whole system. Whatever is submitted, a company is always saved in KES.
+        static::saving(fn (Company $company) => $company->currency = config('bizcore.currency'));
+    }
+
     protected function casts(): array
     {
         return ['is_active' => 'boolean', 'settings' => 'array'];

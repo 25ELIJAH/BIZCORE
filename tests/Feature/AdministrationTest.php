@@ -35,7 +35,7 @@ class AdministrationTest extends TestCase
     public function test_super_admin_can_create_a_company_and_it_is_audited(): void
     {
         Livewire::test(CreateCompany::class)
-            ->fillForm(['name' => 'Nile Traders', 'registration_number' => 'REG-1', 'currency' => 'KES', 'is_active' => true, 'email' => 'hello@nile.test'])
+            ->fillForm(['name' => 'Nile Traders', 'registration_number' => 'REG-1', 'is_active' => true, 'email' => 'hello@nile.test'])
             ->call('create')->assertHasNoFormErrors();
 
         $company = Company::where('name', 'Nile Traders')->firstOrFail();
@@ -44,15 +44,25 @@ class AdministrationTest extends TestCase
         $this->assertDatabaseHas('activity_logs', ['action' => 'company.created', 'company_id' => $company->id]);
     }
 
+    public function test_every_company_is_saved_in_kenyan_shillings_whatever_is_submitted(): void
+    {
+        $company = Company::create(['name' => 'Dollar Co', 'currency' => 'USD']);
+        $this->assertSame('KES', $company->currency);
+
+        $company->update(['currency' => 'EUR']);
+        $this->assertSame('KES', $company->fresh()->currency);
+        $this->assertSame('KES', Company::factory()->create()->currency);
+    }
+
     public function test_company_registration_number_must_be_unique_and_name_is_required(): void
     {
         Company::factory()->create(['registration_number' => 'REG-DUP']);
 
         Livewire::test(CreateCompany::class)
-            ->fillForm(['name' => 'Other', 'registration_number' => 'REG-DUP', 'currency' => 'USD'])
+            ->fillForm(['name' => 'Other', 'registration_number' => 'REG-DUP'])
             ->call('create')->assertHasFormErrors(['registration_number']);
         Livewire::test(CreateCompany::class)
-            ->fillForm(['name' => '', 'currency' => 'USD'])->call('create')->assertHasFormErrors(['name' => 'required']);
+            ->fillForm(['name' => ''])->call('create')->assertHasFormErrors(['name' => 'required']);
     }
 
     public function test_company_can_be_edited_and_the_negative_stock_setting_saved(): void

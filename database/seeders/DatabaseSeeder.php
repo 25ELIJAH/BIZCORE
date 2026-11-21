@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AccessSeeder::class,
             DevelopmentSeeder::class, // local environment only
+            DemoDataSeeder::class,    // local environment only: three months of realistic trading data
         ]);
     }
 }

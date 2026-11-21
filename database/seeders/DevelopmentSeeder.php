@@ -21,8 +21,8 @@ class DevelopmentSeeder extends Seeder
             return;
         }
 
-        $acme = Company::firstOrCreate(['name' => 'Acme Trading Ltd'], ['currency' => 'USD', 'email' => 'info@acme.test']);
-        $globex = Company::firstOrCreate(['name' => 'Globex Supplies'], ['currency' => 'USD', 'email' => 'info@globex.test']);
+        $acme = Company::firstOrCreate(['name' => 'Acme Trading Ltd'], ['currency' => 'KES', 'email' => 'info@acme.test']);
+        $globex = Company::firstOrCreate(['name' => 'Globex Supplies'], ['currency' => 'KES', 'email' => 'info@globex.test']);
 
         $roles = Role::pluck('id', 'slug');
 

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    // BizCore is a Kenyan-shilling system: every company transacts in KES, there is no per-company currency.
+    'currency' => 'KES',
+
     /*
      | Payment methods offered when a company has not configured its own
      | (company setting `payment_methods`, a slug => label map).
