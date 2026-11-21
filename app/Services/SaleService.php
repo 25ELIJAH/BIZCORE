@@ -121,7 +121,7 @@ class SaleService
             }
 
             return $sale->refresh()->load(['items', 'invoice', 'customer']);
-        });
+        }, 5);
     }
 
     /**

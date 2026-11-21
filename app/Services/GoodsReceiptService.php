@@ -107,6 +107,6 @@ class GoodsReceiptService
             $order->setRawAttributes($locked->getAttributes(), true);
 
             return $receipt->load('items');
-        });
+        }, 5);
     }
 }

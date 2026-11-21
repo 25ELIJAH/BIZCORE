@@ -68,7 +68,7 @@ class PaymentService
             $sale->setRawAttributes($locked->getAttributes(), true);
 
             return $payment;
-        });
+        }, 5);
     }
 
     /** Reverse a mistaken payment. The row is kept (voided with a reason), never deleted. */

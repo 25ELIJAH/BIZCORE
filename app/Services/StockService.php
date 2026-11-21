@@ -125,7 +125,7 @@ class StockService
             $product->setRawAttributes($locked->getAttributes(), true);
 
             return $movement;
-        });
+        }, 5);
     }
 
     /** Re-read the product with a row lock. The company scope makes another company's product unreachable. */

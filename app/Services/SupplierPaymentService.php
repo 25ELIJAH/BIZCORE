@@ -65,7 +65,7 @@ class SupplierPaymentService
             $order->setRawAttributes($locked->getAttributes(), true);
 
             return $payment;
-        });
+        }, 5);
     }
 
     public function void(SupplierPayment $payment, string $reason): SupplierPayment

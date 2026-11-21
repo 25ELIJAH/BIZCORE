@@ -101,7 +101,7 @@ class PurchaseOrderService
             $this->activityLogger->log($isNew ? 'purchase_order.created' : 'purchase_order.updated', $order, ['po_number' => $order->po_number, 'total' => (string) $order->total]);
 
             return $order->load('items');
-        });
+        }, 5);
     }
 
     public function submit(PurchaseOrder $order): PurchaseOrder
