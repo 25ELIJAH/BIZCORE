@@ -61,7 +61,11 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                // DB_SSL=true encrypts the connection to a hosted database (Aiven, etc.). Without a CA file the
+                // server certificate is not verified, so set MYSQL_ATTR_SSL_CA as well where you can.
+                Mysql::ATTR_SSL_CIPHER => env('DB_SSL') ? 'DEFAULT' : null,
+                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => env('DB_SSL') && ! env('MYSQL_ATTR_SSL_CA') ? false : null,
+            ], fn ($v) => $v !== null) : [],
         ],
 
         'mariadb' => [
