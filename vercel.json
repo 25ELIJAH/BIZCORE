@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.4",
+      "maxDuration": 30,
+      "excludeFiles": "{node_modules/**,tests/**,resources/js/**,resources/css/**}"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.php" }]
+}
