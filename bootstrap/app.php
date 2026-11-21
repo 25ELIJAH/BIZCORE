@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Vercel's proxy the request arrives as plain HTTP; trust X-Forwarded-* so URLs are generated as https.
+        $middleware->trustProxies(at: '*');
         $middleware->alias(['company' => ResolveCurrentCompany::class]);
         // The tenant context must exist before route-model binding runs, otherwise bound
         // records are looked up with no company (fail-closed 404) or the wrong one.
