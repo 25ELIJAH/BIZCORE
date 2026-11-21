@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <title>{{ $sale->invoice->invoice_number }}</title>
     <style>
+        @page { margin: 34px 38px 52px 38px; }
+        .page-footer { position: fixed; bottom: -32px; left: 0; right: 0; color: #94a3b8; font-size: 9px; border-top: 1px solid #e2e8f0; padding-top: 5px; }
+        .page-footer .right { float: right; }
+        .pagenum:after { content: "Page " counter(page); }
+        .keep { page-break-inside: avoid; }
+        thead { display: table-header-group; }
+        .items tr { page-break-inside: avoid; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; }
         h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: 1px; }
         table { width: 100%; border-collapse: collapse; }
@@ -18,6 +25,7 @@
     </style>
 </head>
 <body>
+<div class="page-footer"><span class="right pagenum"></span>{{ $company->name }} · Invoice {{ $sale->invoice->invoice_number }}</div>
 @php
     $money = fn ($v) => number_format((float) $v, 2);
     $label = $sale->isCancelled() ? ['Cancelled', 'cancelled'] : ($sale->isOverdue() ? ['Overdue', 'overdue'] : ($sale->payment_status === 'paid' ? ['Paid', 'paid'] : ($sale->payment_status === 'partial' ? ['Partially paid', 'due'] : ['Unpaid', 'due'])));
@@ -64,6 +72,7 @@
     </tbody>
 </table>
 
+<div class="keep">
 <table class="totals" style="width: 55%; margin-left: 45%; margin-top: 10px;">
     <tr><td>Subtotal</td><td class="right">{{ $money($sale->subtotal) }}</td></tr>
     @if (bccomp((string) $sale->discount_amount, '0', 2) > 0)
@@ -83,6 +92,8 @@
         {{ $payment->paid_at->format('d M Y') }} · {{ $methods[$payment->method] ?? $payment->method }} · {{ $money($payment->amount) }}@if ($payment->reference) · Ref {{ $payment->reference }}@endif<br>
     @endforeach
 @endif
+
+</div>
 
 @if ($sale->notes)<p class="muted" style="margin-top: 18px;">Notes: {{ $sale->notes }}</p>@endif
 @if ($sale->isCancelled())<p style="margin-top: 18px; color: #b91c1c;"><strong>This invoice was cancelled</strong>{{ $sale->cancel_reason ? ': '.$sale->cancel_reason : '' }}.</p>@endif
