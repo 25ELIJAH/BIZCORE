@@ -38,7 +38,7 @@ function countUp() {
         const start = performance.now();
         const duration = 900;
         const tick = (now) => {
-            const t = Math.min(1, (now - start) / duration);
+            const t = Math.max(0, Math.min(1, (now - start) / duration));
             const eased = 1 - Math.pow(1 - t, 4);
             el.textContent = t < 1 ? fmt.format(target * eased) : final;
             if (t < 1) requestAnimationFrame(tick);
