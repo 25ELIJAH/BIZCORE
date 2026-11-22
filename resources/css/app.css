@@ -170,9 +170,9 @@ main table tbody tr:hover { transform: translateX(3px); }
 aside nav > div { animation: slide-in 0.45s ease backwards; }
 aside nav > div:nth-child(2) { animation-delay: 0.07s; } aside nav > div:nth-child(3) { animation-delay: 0.14s; }
 aside nav > div:nth-child(4) { animation-delay: 0.21s; } aside nav > div:nth-child(n+5) { animation-delay: 0.28s; }
-aside > a.rounded-full { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
-aside > a.rounded-full:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.35); }
-aside > a.rounded-full:active { transform: scale(0.96); }
+a.rail-add { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+a.rail-add:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.35); }
+a.rail-add:active { transform: scale(0.96); }
 
 /* Header: logo, company pill, avatar and icon buttons respond to the pointer */
 header a[href] > span:first-child { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -191,3 +191,49 @@ header button:active, header label[for='nav-toggle']:active { transform: scale(0
 /* Panels (cards, charts) lift slightly on hover */
 main .rounded-2xl.bg-brand-soft:not(.kpi) { transition: box-shadow 0.25s ease, transform 0.25s ease; }
 main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px rgb(31 85 176 / 0.3); transform: translateY(-2px); }
+
+/* ------------------------------------------------------------------
+   Icon rail (desktop): dark rounded pill, the active item sits in a
+   curved notch. Below 1024px the drawer keeps full labels.
+------------------------------------------------------------------- */
+@property --notch-y { syntax: '<length>'; inherits: true; initial-value: -200px; }
+.rail { display: flex; flex: 1; flex-direction: column; }
+.rail-goo, .rail-shape, .rail-bubble { display: none; }
+
+@media (min-width: 1024px) {
+    .rail { position: relative; flex: none; width: 80px; padding: 20px 0 22px; transition: --notch-y 0.6s cubic-bezier(0.34, 1.25, 0.64, 1); }
+    .rail.no-anim { transition: none; }
+    .rail-goo { display: block; position: absolute; inset: 0; filter: url(#rail-goo); }
+    .rail-shape {
+        display: block; position: absolute; inset: 0; border-radius: 40px; background: #12326b;
+        -webkit-mask-image: radial-gradient(circle 35px at 58px var(--notch-y), transparent 34px, #000 35px);
+        mask-image: radial-gradient(circle 35px at 58px var(--notch-y), transparent 34px, #000 35px);
+    }
+    .rail-bubble {
+        display: block; position: absolute; left: 32px; top: calc(var(--notch-y) - 26px); width: 52px; height: 52px;
+        border-radius: 9999px; background: #b9cef7; box-shadow: 0 8px 18px -6px rgb(37 99 201 / 0.55); animation: pop 0.4s ease 0.2s backwards;
+    }
+    .rail > a.rail-add { position: relative; z-index: 10; display: flex; width: 48px; height: 48px; margin: 0 auto 18px; padding: 0; background: #ffffff; color: #12326b; }
+    .rail > nav { flex: none; }
+    .rail > nav > div + div { margin-top: 14px; }
+    .rail > nav .space-y-0\.5 > * + * { margin-top: 6px; }
+
+    .nav-link { width: 80px; height: 48px; padding: 0; justify-content: center; border-radius: 9999px; overflow: visible; background: transparent; }
+    .nav-link svg { width: 22px; height: 22px; color: rgb(255 255 255 / 0.78); }
+    .nav-link:hover { background: transparent; }
+    .nav-link:hover svg { color: #ffffff; }
+    .nav-link[aria-current='page'] { background: transparent; color: #12326b; }
+    .nav-link[aria-current='page'] svg, .nav-link[aria-current='page']:hover svg { color: #12326b; }
+    .nav-link .ripple-dot, .rail-add .ripple-dot { width: 48px !important; height: 48px !important; left: 16px !important; top: 0 !important; }
+    .rail-add .ripple-dot { left: 0 !important; background: #2563c9; }
+    .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    /* Tooltip with the page name, slides out beside the icon */
+    .nav-link::after, a.rail-add::after {
+        content: attr(data-label); position: absolute; left: calc(100% + 14px); top: 50%; z-index: 60; padding: 6px 12px; border-radius: 9999px;
+        background: #12326b; color: #ffffff; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none;
+        opacity: 0; transform: translate(-6px, -50%); transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    a.rail-add::after { left: calc(100% + 14px); }
+    .nav-link:hover::after, a.rail-add:hover::after, .nav-link:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+}

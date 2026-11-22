@@ -57,6 +57,7 @@
 </head>
 <body class="has-shell min-h-screen text-slate-800 antialiased">
 <div id="busy-bar" class="busy-bar" aria-hidden="true"></div>
+<svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false"><filter id="rail-goo" x="-60%" y="-8%" width="220%" height="116%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDeviation="7"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"/></filter></svg>
 <div class="min-h-screen lg:p-6">
 <div class="mx-auto flex min-h-screen max-w-[1500px] flex-col overflow-hidden bg-white lg:min-h-[calc(100vh-3rem)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]" id="shell">
 
@@ -65,7 +66,7 @@
         <label for="nav-toggle" class="cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-brand-soft lg:hidden" aria-label="Toggle navigation">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </label>
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3 lg:w-[212px]">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
             <span class="text-xl font-bold text-indigo-600">{{ config('app.name') }}</span>
         </a>
@@ -103,24 +104,27 @@
         <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/40 peer-checked:block lg:peer-checked:hidden" aria-hidden="true"></label>
 
         {{-- Curved blue sidebar --}}
-        <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-indigo-600 px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-auto lg:w-[252px] lg:shrink-0 lg:translate-x-0 lg:rounded-tr-[56px] lg:pt-8">
+        <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-indigo-600 px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-20 lg:w-[112px] lg:shrink-0 lg:translate-x-0 lg:overflow-visible lg:bg-transparent lg:px-4 lg:pb-8 lg:pt-2">
+            <div class="rail">
+                <div class="rail-goo" aria-hidden="true"><div class="rail-shape"></div></div>
+                <span class="rail-bubble" aria-hidden="true"></span>
             @can('sales.create')
-                <a href="{{ route('sales.create') }}" class="mb-7 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">
+                <a href="{{ route('sales.create') }}" data-label="New sale" class="rail-add mb-7 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-                    New sale
+                    <span class="lg:sr-only">New sale</span>
                 </a>
             @endcan
-            <nav class="flex-1 space-y-5" aria-label="Main">
+            <nav class="relative z-10 flex-1 space-y-5" aria-label="Main">
                 @foreach ($groups as $group => $items)
                     @php $visible = collect($items)->filter(fn ($i) => auth()->user()->can($i['can'])); @endphp
                     @if ($visible->isNotEmpty())
                         <div>
-                            <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50">{{ $group }}</p>
+                            <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50 lg:hidden">{{ $group }}</p>
                             <div class="space-y-0.5">
                                 @foreach ($visible as $item)
-                                    <a href="{{ route($item['route']) }}" class="nav-link group" @if (request()->routeIs($item['active'])) aria-current="page" @endif>
+                                    <a href="{{ route($item['route']) }}" class="nav-link group" data-label="{{ $item['label'] }}" @if (request()->routeIs($item['active'])) aria-current="page" @endif>
                                         <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons[$item['icon']] }}"/></svg>
-                                        {{ $item['label'] }}
+                                        <span class="nav-label">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach
                             </div>
@@ -129,19 +133,20 @@
                 @endforeach
                 @if (auth()->user()->is_super_admin)
                     <div>
-                        <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50">System</p>
-                        <a href="/admin" class="nav-link group">
+                        <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50 lg:hidden">System</p>
+                        <a href="/admin" data-label="Administration" class="nav-link group">
                             <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons['admin'] }}"/></svg>
-                            Administration
+                            <span class="nav-label">Administration</span>
                         </a>
                     </div>
                 @endif
             </nav>
 
-            <div class="mt-6 border-t border-white/20 pt-4 text-xs">
+            <div class="mt-6 border-t border-white/20 pt-4 text-xs lg:hidden">
                 <p class="font-semibold uppercase tracking-wider text-white/60">Company</p>
                 <p class="mt-1.5 truncate text-sm font-medium text-white">{{ $currentCompany->name }}</p>
                 <p class="text-white/70">Currency {{ $currentCompany->currency }}</p>
+            </div>
             </div>
         </aside>
 

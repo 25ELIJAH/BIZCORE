@@ -88,7 +88,38 @@ document.addEventListener('pointerdown', (e) => {
     setTimeout(() => dot.remove(), 650);
 });
 
+// Desktop icon rail: the curved notch and its bubble glide from the previous page's item to the current one.
+function railNotch() {
+    const rail = document.querySelector('.rail');
+    if (!rail) return;
+    const active = rail.querySelector('.nav-link[aria-current="page"]');
+    if (!active || !window.matchMedia('(min-width: 1024px)').matches) {
+        rail.style.setProperty('--notch-y', '-200px');
+        return;
+    }
+    const place = () => active.getBoundingClientRect().top - rail.getBoundingClientRect().top + active.offsetHeight / 2;
+    let from = null;
+    try { from = sessionStorage.getItem('railY'); } catch (e) { /* storage unavailable */ }
+    rail.classList.add('no-anim');
+    rail.style.setProperty('--notch-y', `${from ?? 24}px`);
+    void rail.offsetWidth;
+    rail.classList.remove('no-anim');
+    requestAnimationFrame(() => {
+        const y = place();
+        rail.style.setProperty('--notch-y', `${y}px`);
+        try { sessionStorage.setItem('railY', String(y)); } catch (e) { /* storage unavailable */ }
+    });
+}
+window.addEventListener('resize', () => {
+    const rail = document.querySelector('.rail');
+    if (!rail) return;
+    rail.classList.add('no-anim');
+    railNotch();
+    setTimeout(() => rail.classList.remove('no-anim'), 50);
+});
+
 function boot() {
+    railNotch();
     mountCharts();
     countUp();
     toasts();
