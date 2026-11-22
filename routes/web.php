@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
             Route::get('movements', StockMovements::class)->name('movements');
         });
 
+        Route::get('activity', \App\Livewire\Activity\Index::class)->name('activity')->middleware('can:activity_logs.view');
         Route::get('customers', CustomersIndex::class)->name('customers.index')->middleware('can:customers.view');
         Route::get('customers/{customer}', CustomerShow::class)->name('customers.show')->middleware('can:customers.view');
         Route::get('suppliers', SuppliersIndex::class)->name('suppliers.index')->middleware('can:suppliers.view');

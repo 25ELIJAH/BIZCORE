@@ -21,6 +21,7 @@
     $groups = [
         'Overview' => [
             ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'home', 'can' => 'dashboard.view', 'active' => 'home'],
+            ['label' => 'Activity', 'icon' => 'attendance', 'route' => 'activity', 'can' => 'activity_logs.view', 'active' => 'activity'],
         ],
         'Trade' => [
             ['label' => 'Sales', 'icon' => 'sales', 'route' => 'sales.index', 'can' => 'sales.view', 'active' => 'sales.*'],
@@ -65,10 +66,7 @@
         <label for="nav-toggle" class="cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-brand-soft lg:hidden" aria-label="Toggle navigation">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </label>
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
-            <span class="text-xl font-bold text-indigo-600">{{ config('app.name') }}</span>
-        </a>
+        <a href="{{ route('home') }}" class="shrink-0" aria-label="BIZCORE home"><x-brand /></a>
 
         <form method="POST" action="{{ route('company.switch') }}" class="order-last flex w-full basis-full items-center sm:order-none sm:ml-2 sm:w-auto sm:min-w-0 sm:flex-1 sm:basis-auto">
             @csrf

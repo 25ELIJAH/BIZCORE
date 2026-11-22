@@ -3,11 +3,14 @@
 namespace App\Livewire\Sales;
 
 use App\Exceptions\BusinessRuleException;
+use App\Mail\InvoiceMail;
 use App\Models\Payment;
 use App\Models\Sale;
+use App\Services\ActivityLogger;
 use App\Services\PaymentService;
 use App\Services\SaleService;
 use App\Support\Tenancy\CurrentCompany;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -172,6 +175,25 @@ class Show extends Component
         $this->sale->refresh();
         $this->notice = 'Sale details updated.';
         $this->closeModals();
+    }
+
+    /** Email the invoice (or, when overdue, a payment reminder) to the customer as a PDF. */
+    public function emailInvoice(bool $reminder, ActivityLogger $log): void
+    {
+        $this->authorize('sales.edit');
+        $this->sale->load(['invoice', 'customer']);
+        $to = $this->sale->customer?->email;
+
+        if ($this->sale->isCancelled() || ! $to) {
+            $this->addError('email', $this->sale->isCancelled() ? 'A cancelled invoice cannot be emailed.' : 'This customer has no email address on file.');
+
+            return;
+        }
+
+        $company = app(CurrentCompany::class)->get();
+        Mail::to($to)->send(new InvoiceMail($this->sale, $company, $reminder));
+        $log->log($reminder ? 'invoice.reminder_sent' : 'invoice.emailed', $this->sale, ['to' => $to]);
+        $this->notice = ($reminder ? 'Reminder' : 'Invoice').' emailed to '.$to.'.';
     }
 
     public function closeModals(): void

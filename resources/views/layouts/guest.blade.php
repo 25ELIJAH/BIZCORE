@@ -13,10 +13,7 @@
     <div class="grid w-full max-w-5xl overflow-hidden bg-white lg:min-h-[600px] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]">
         {{-- Blue panel with the curved edge --}}
         <aside class="hidden flex-col justify-between bg-ink p-10 text-white lg:flex lg:rounded-tr-[72px]">
-            <div class="flex items-center gap-3">
-                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base font-bold text-indigo-600">B</span>
-                <span class="text-xl font-bold">{{ config('app.name') }}</span>
-            </div>
+            <x-brand light size="lg" />
             <div>
                 <h2 class="text-3xl font-bold leading-snug">Everything your business runs on, in one place.</h2>
                 <ul class="mt-7 space-y-3 text-sm text-white/85">
@@ -25,16 +22,13 @@
                     <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white"></span>Each company's data kept separate, with roles for your team</li>
                 </ul>
             </div>
-            <p class="text-xs text-white/60">&copy; {{ date('Y') }} {{ config('app.name') }}</p>
+            <p class="text-xs text-white/60">&copy; {{ date('Y') }} BIZCORE &middot; ERP Management System</p>
         </aside>
 
         <main class="flex items-center justify-center px-6 py-12 sm:px-12">
             <div class="w-full max-w-sm">
                 <div class="mb-8">
-                    <div class="mb-6 flex items-center gap-2.5 lg:hidden">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
-                        <span class="text-lg font-bold text-indigo-600">{{ config('app.name') }}</span>
-                    </div>
+                    <x-brand class="mb-6 lg:hidden" />
                     <h1 class="text-3xl font-bold text-indigo-600">Sign in</h1>
                     <p class="mt-1 text-sm text-slate-500">Enter your details to access your account.</p>
                 </div>

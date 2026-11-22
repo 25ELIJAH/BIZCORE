@@ -33,7 +33,7 @@
         .title .word { font-size: 31pt; font-weight: bold; letter-spacing: 2pt; color: {{ $orange }}; line-height: 1; }
         .title .no { margin-top: 8pt; font-size: 9.5pt; letter-spacing: 1pt; color: #ffffff; }
         .title .badge { display: inline-block; margin-top: 8pt; padding: 3pt 10pt; font-size: 8pt; font-weight: bold; letter-spacing: 1pt; text-transform: uppercase; color: #ffffff; }
-        .page { padding: 190pt 42pt 0 42pt; }
+        .page { padding: 166pt 42pt 0 42pt; }
         .chip { display: inline-block; padding: 4pt 10pt; background: {{ $navy }}; color: #ffffff; font-size: 8.5pt; font-weight: bold; letter-spacing: 1pt; text-transform: uppercase; border-bottom: 2pt solid {{ $orange }}; }
         .who strong { font-size: 11pt; }
         .muted { color: #64748b; line-height: 1.55; }
@@ -97,7 +97,7 @@
         </tr>
     </table>
 
-    <table class="meta" style="margin-top: 16px;">
+    <table class="meta" style="margin-top: 12px;">
         <tr>
             <td><div class="k">Issue date</div><div class="v">{{ $sale->invoice->issue_date->format('d M Y') }}</div></td>
             <td><div class="k">Due date</div><div class="v">{{ $sale->invoice->due_date->format('d M Y') }}</div></td>
@@ -106,7 +106,7 @@
         </tr>
     </table>
 
-    <table class="items" style="margin-top: 16px;">
+    <table class="items" style="margin-top: 12px;">
         <thead><tr><th style="width: 50%;">Description</th><th class="c">Qty</th><th class="r">Unit price</th><th class="r">Total</th></tr></thead>
         <tbody>
         @foreach ($sale->items as $item)
@@ -121,17 +121,34 @@
     </table>
 
     <div class="keep">
-    <table style="margin-top: 14px;">
+    @php
+        $bank = array_filter([
+            'Bank' => $company->setting('bank_name'),
+            'Account name' => $company->setting('bank_account_name'),
+            'Account no.' => $company->setting('bank_account_number'),
+            'Branch' => $company->setting('bank_branch'),
+        ]);
+        $web = $company->setting('website');
+    @endphp
+    <table style="margin-top: 14pt;">
         <tr>
-            <td style="width: 52%; vertical-align: top; padding-right: 18px;">
-                <span class="chip">Payment</span>
-                <div class="muted" style="margin-top: 8px;">
-                    @forelse ($sale->payments as $payment)
-                        {{ $payment->paid_at->format('d M Y') }} &middot; {{ $methods[$payment->method] ?? $payment->method }} &middot; {{ $money($payment->amount) }}@if ($payment->reference) &middot; Ref {{ $payment->reference }}@endif<br>
+            <td style="width: 35%; vertical-align: top; padding-right: 10pt;">
+                <span class="chip">Payment method</span>
+                <div class="muted" style="margin-top: 8pt;">
+                    @forelse ($bank as $k => $v)
+                        <span style="color: #1e293b;">{{ $k }}</span> : {{ $v }}<br>
                     @empty
-                        No payment received yet.<br>
+                        Accepted : {{ implode(', ', array_values($methods)) }}<br>
                     @endforelse
-                    <span style="color:#64748b;">Accepted: {{ implode(', ', array_values($methods)) }}</span>
+                    @if ($bank !== [])<span>Also accepted : {{ implode(', ', array_values($methods)) }}</span>@endif
+                </div>
+            </td>
+            <td style="width: 29%; vertical-align: top; padding-right: 10pt;">
+                <span class="chip">Contact info</span>
+                <div class="muted" style="margin-top: 8pt;">
+                    @if ($company->phone)<span style="color: #1e293b;">Phone</span> : {{ $company->phone }}<br>@endif
+                    @if ($company->email)<span style="color: #1e293b;">Email</span> : {{ $company->email }}<br>@endif
+                    @if ($web)<span style="color: #1e293b;">Web</span> : {{ $web }}<br>@endif
                 </div>
             </td>
             <td style="vertical-align: top;">
@@ -143,7 +160,7 @@
                     @if (bccomp((string) $sale->tax_rate, '0', 2) > 0)
                         <tr><td>Tax ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') }}%)</td><td class="r">{{ $money($sale->tax_amount) }}</td></tr>
                     @endif
-                    <tr class="grand"><td>TOTAL ({{ $company->currency }})</td><td class="r">{{ $money($sale->total) }}</td></tr>
+                    <tr class="grand"><td>TOTAL</td><td class="r">{{ $money($sale->total) }}</td></tr>
                     <tr><td>Amount paid</td><td class="r">{{ $money($sale->amount_paid) }}</td></tr>
                     <tr><td><strong>Balance due</strong></td><td class="r"><strong>{{ $money($sale->balance()) }}</strong></td></tr>
                 </table>
@@ -151,15 +168,27 @@
         </tr>
     </table>
 
+    @if ($sale->payments->isNotEmpty())
+        <div style="margin-top: 14pt;">
+            <span class="chip">Payments received</span>
+            <div class="muted" style="margin-top: 8pt;">
+                @foreach ($sale->payments as $payment)
+                    {{ $payment->paid_at->format('d M Y') }} &middot; {{ $methods[$payment->method] ?? $payment->method }} &middot; {{ $company->currency }} {{ $money($payment->amount) }}@if ($payment->reference) &middot; Ref {{ $payment->reference }}@endif<br>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <table style="margin-top: 18px;">
         <tr>
             <td style="vertical-align: bottom;">
                 <div style="font-size: 11px; font-weight: bold; color: {{ $navy }};">Thanks for your business</div>
                 @if ($sale->notes)<div class="muted" style="margin-top: 4px; max-width: 300px;">{{ $sale->notes }}</div>@endif
+                @if ($company->setting('invoice_note'))<div class="muted" style="margin-top: 4px; max-width: 300px;">{{ $company->setting('invoice_note') }}</div>@endif
                 @if ($sale->isCancelled())<div style="margin-top: 6px; color: #b91c1c;"><strong>This invoice was cancelled</strong>{{ $sale->cancel_reason ? ': '.$sale->cancel_reason : '' }}.</div>@endif
             </td>
             <td style="vertical-align: bottom; width: 190px;">
-                <div style="height: 34px;"></div>
+                <div style="height: 22px;"></div>
                 <div class="line">Authorised signature</div>
             </td>
         </tr>

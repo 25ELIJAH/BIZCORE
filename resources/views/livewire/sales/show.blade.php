@@ -2,6 +2,7 @@
     <a href="{{ route('sales.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Sales</a>
 
     @if ($notice)<p class="mt-3 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700" role="status">{{ $notice }}</p>@endif
+    @error('email')<p class="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">{{ $message }}</p>@enderror
 
     <div class="mb-6 mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -18,6 +19,10 @@
             <a href="{{ route('sales.invoice', $sale) }}" target="_blank" class="btn-secondary">View invoice</a>
             <a href="{{ route('sales.invoice', [$sale, 'download' => 1]) }}" class="btn-secondary">Download PDF</a>
             @unless ($sale->isCancelled())
+                @can('sales.edit')
+                    <button type="button" wire:click="emailInvoice(false)" wire:loading.attr="disabled" wire:target="emailInvoice" class="btn-secondary">Email invoice</button>
+                    @if ($sale->isOverdue())<button type="button" wire:click="emailInvoice(true)" wire:loading.attr="disabled" wire:target="emailInvoice" class="btn-primary">Send reminder</button>@endif
+                @endcan
                 @can('sales.edit')<button type="button" wire:click="openEdit" class="btn-secondary">Edit details</button>@endcan
                 @can('sales.cancel')<button type="button" wire:click="openCancel" class="btn-danger">Cancel sale</button>@endcan
             @endunless
