@@ -61,16 +61,16 @@
 <div class="mx-auto flex min-h-screen max-w-[1500px] flex-col overflow-hidden bg-white lg:min-h-[calc(100vh-3rem)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]" id="shell">
 
     {{-- Top bar: logo, company switcher, user --}}
-    <header class="flex h-20 shrink-0 items-center gap-4 px-4 md:px-8">
+    <header class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:h-20 sm:flex-nowrap sm:py-0 md:px-8">
         <label for="nav-toggle" class="cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-brand-soft lg:hidden" aria-label="Toggle navigation">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </label>
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3 lg:w-[212px]">
             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
-            <span class="hidden text-xl font-bold text-indigo-600 sm:block">{{ config('app.name') }}</span>
+            <span class="text-xl font-bold text-indigo-600">{{ config('app.name') }}</span>
         </a>
 
-        <form method="POST" action="{{ route('company.switch') }}" class="ml-2 flex min-w-0 flex-1 items-center">
+        <form method="POST" action="{{ route('company.switch') }}" class="order-last flex w-full basis-full items-center sm:order-none sm:ml-2 sm:w-auto sm:min-w-0 sm:flex-1 sm:basis-auto">
             @csrf
             <label for="company_id" class="sr-only">Company</label>
             <div class="relative w-full max-w-md">
@@ -86,7 +86,7 @@
             <noscript><button class="rounded border px-2 py-1 text-sm">Switch</button></noscript>
         </form>
 
-        <div class="flex shrink-0 items-center gap-3 text-sm">
+        <div class="ml-auto flex shrink-0 items-center gap-3 text-sm sm:ml-0">
             <span class="hidden font-medium text-slate-700 sm:block">{{ auth()->user()->name }}</span>
             <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
             <form method="POST" action="{{ route('logout') }}">
