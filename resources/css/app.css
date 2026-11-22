@@ -10,25 +10,26 @@
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* ONE place to change the brand colour. Every view uses the "indigo" utilities for its accent. */
-    --color-indigo-50: #eef3fd;
-    --color-indigo-100: #dbe6fb;
-    --color-indigo-200: #b9cef7;
-    --color-indigo-300: #8fb0f0;
-    --color-indigo-400: #5f8be6;
-    --color-indigo-500: #3a71da;
-    --color-indigo-600: #2563c9;
-    --color-indigo-700: #1f55b0;
-    --color-indigo-800: #19438d;
-    --color-indigo-900: #12326b;
+    --color-indigo-50: #fff4ed;
+    --color-indigo-100: #ffe6d5;
+    --color-indigo-200: #fecbaa;
+    --color-indigo-300: #fdaa74;
+    --color-indigo-400: #fa8239;
+    --color-indigo-500: #f56e22;
+    --color-indigo-600: #ef5f18;
+    --color-indigo-700: #c94a0f;
+    --color-indigo-800: #a03d12;
+    --color-indigo-900: #823614;
 
-    --color-brand: #2563c9;       /* sidebar, page backdrop, primary actions */
-    --color-brand-deep: #1f55b0;
-    --color-brand-soft: #eef2fa;  /* quiet card surface */
-    --color-brand-tint: #e3ecfc;  /* selected / hovered row */
-    --color-backdrop: #2b68cf;
+    --color-brand: #ef5f18;       /* primary actions */
+    --color-ink: #261a66;         /* deep purple: sidebar, headings, page backdrop */
+    --color-brand-deep: #c94a0f;
+    --color-brand-soft: #f5f3fb;  /* quiet card surface */
+    --color-brand-tint: #ece8f8;  /* selected / hovered row */
+    --color-backdrop: #261a66;
 
     --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04);
-    --shadow-shell: 0 30px 70px -20px rgb(10 30 80 / 0.55);
+    --shadow-shell: 0 30px 70px -20px rgb(20 10 60 / 0.55);
 
     --animate-fade-in: fade-in 0.2s ease-out both;
     --animate-pop: pop 0.18s ease-out both;
@@ -52,8 +53,8 @@
         body.has-shell { background-color: var(--color-backdrop); }
     }
     h1, h2, h3 { letter-spacing: -0.011em; }
-    ::selection { background: #b9cef7; color: #12326b; }
-    :focus-visible { outline: 2px solid #3a71da; outline-offset: 2px; }
+    ::selection { background: #fecbaa; color: #261a66; }
+    :focus-visible { outline: 2px solid #ef5f18; outline-offset: 2px; }
     table, .kpi, [data-count] { font-variant-numeric: tabular-nums; }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 }
@@ -70,7 +71,7 @@
     .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
     /* Page titles: large, bold, brand colour; section labels: small caps */
-    main h1 { @apply text-[1.75rem] font-bold leading-tight text-indigo-600; }
+    main h1 { @apply text-[1.75rem] font-bold leading-tight text-ink; }
 
     /* Surfaces: quiet grey-blue panels, no borders or shadows */
     .card, main .rounded-xl.border.border-slate-200.bg-white {
@@ -108,7 +109,7 @@
     /* Sidebar links on the blue panel */
     .nav-link { @apply relative flex items-center gap-3 rounded-full px-4 py-2 text-[13px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white; }
     .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-white/70 transition-colors group-hover:text-white; }
-    .nav-link[aria-current='page'] { @apply bg-white text-indigo-700; }
+    .nav-link[aria-current='page'] { @apply bg-white text-ink; }
     .nav-link[aria-current='page'] svg { @apply text-indigo-600; }
 
     .toast { animation: var(--animate-pop); }
@@ -118,8 +119,8 @@
 /* Unlayered so they beat the text-colour utilities used inside the cards */
 .kpi.is-primary, .kpi.is-primary p, .kpi.is-primary span { color: #ffffff; }
 .kpi.is-primary p:first-child { color: rgba(255, 255, 255, 0.8); }
-.kpi.is-primary { background-color: #2563c9; }
-.kpi.is-primary::before { background-color: #2563c9; }
+.kpi.is-primary { background-color: #ef5f18; }
+.kpi.is-primary::before { background-color: #ef5f18; }
 
 /* ------------------------------------------------------------------
    Motion layer (colours, layout and fonts above are untouched).
@@ -141,7 +142,7 @@ main > :nth-child(n+6), main > div > :nth-child(n+6) { animation-delay: 0.3s; }
 .kpi { animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background-color 0.2s ease; }
 .kpi:nth-child(2) { animation-delay: 0.07s; } .kpi:nth-child(3) { animation-delay: 0.14s; }
 .kpi:nth-child(4) { animation-delay: 0.21s; } .kpi:nth-child(5) { animation-delay: 0.28s; } .kpi:nth-child(6) { animation-delay: 0.35s; }
-.kpi:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -12px rgb(31 85 176 / 0.35); }
+.kpi:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -12px rgb(38 26 102 / 0.3); }
 .kpi:active { transform: translateY(-1px) scale(0.99); }
 
 /* Table rows: gentle entrance, nudge on hover */
@@ -154,11 +155,11 @@ main table tbody tr:hover { transform: translateX(3px); }
 /* Buttons: lift on hover, press on click, ripple */
 .btn-primary, .btn-secondary, .btn-danger, .nav-link, .ripple { position: relative; overflow: hidden; }
 .btn-primary, .btn-secondary, .btn-danger { transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease; }
-.btn-primary:hover:not(:disabled), .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 16px -6px rgb(31 85 176 / 0.5); }
+.btn-primary:hover:not(:disabled), .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 16px -6px rgb(239 95 24 / 0.5); }
 .btn-secondary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 16px -8px rgb(15 23 42 / 0.25); }
 .btn-primary:active:not(:disabled), .btn-secondary:active:not(:disabled), .btn-danger:active:not(:disabled) { transform: scale(0.95); box-shadow: none; }
 .ripple-dot { position: absolute; border-radius: 9999px; background: currentColor; pointer-events: none; animation: ripple 0.65s ease-out forwards; }
-.btn-secondary .ripple-dot { background: #2563c9; }
+.btn-secondary .ripple-dot { background: #ef5f18; }
 
 /* Sidebar: links slide and their icons pop; pills press */
 .nav-link { transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -166,7 +167,7 @@ main table tbody tr:hover { transform: translateX(3px); }
 .nav-link:active { transform: translateX(4px) scale(0.97); }
 .nav-link svg { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease; }
 .nav-link:hover svg { transform: scale(1.2) rotate(-6deg); }
-.nav-link[aria-current='page'] .ripple-dot { background: #2563c9; }
+.nav-link[aria-current='page'] .ripple-dot { background: #ef5f18; }
 aside nav > div { animation: slide-in 0.45s ease backwards; }
 aside nav > div:nth-child(2) { animation-delay: 0.07s; } aside nav > div:nth-child(3) { animation-delay: 0.14s; }
 aside nav > div:nth-child(4) { animation-delay: 0.21s; } aside nav > div:nth-child(n+5) { animation-delay: 0.28s; }
@@ -190,7 +191,7 @@ header button:active, header label[for='nav-toggle']:active { transform: scale(0
 
 /* Panels (cards, charts) lift slightly on hover */
 main .rounded-2xl.bg-brand-soft:not(.kpi) { transition: box-shadow 0.25s ease, transform 0.25s ease; }
-main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px rgb(31 85 176 / 0.3); transform: translateY(-2px); }
+main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px rgb(38 26 102 / 0.3); transform: translateY(-2px); }
 
 /* ------------------------------------------------------------------
    Icon rail (desktop): dark rounded pill, the active item sits in a
@@ -203,12 +204,12 @@ main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px 
 @media (min-width: 1024px) {
     .rail { position: relative; flex: none; width: 80px; padding: 20px 0 22px; }
     .rail-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-    .rail-svg path { fill: #12326b; }
+    .rail-svg path { fill: #261a66; }
     .rail-bubble {
         display: block; position: absolute; left: 32px; top: calc(var(--notch-y) - 26px); width: 52px; height: 52px;
-        border-radius: 9999px; background: #b9cef7; box-shadow: 0 8px 18px -6px rgb(37 99 201 / 0.55); animation: pop 0.4s ease 0.2s backwards;
+        border-radius: 9999px; background: #ef5f18; box-shadow: 0 8px 18px -6px rgb(239 95 24 / 0.6); animation: pop 0.4s ease 0.2s backwards;
     }
-    .rail > a.rail-add { position: relative; z-index: 10; display: flex; width: 48px; height: 48px; margin: 0 auto 18px; padding: 0; background: #ffffff; color: #12326b; }
+    .rail > a.rail-add { position: relative; z-index: 10; display: flex; width: 48px; height: 48px; margin: 0 auto 18px; padding: 0; background: #ffffff; color: #261a66; }
     .rail > nav { flex: none; }
     .rail > nav > div + div { margin-top: 14px; }
     .rail > nav .space-y-0\.5 > * + * { margin-top: 6px; }
@@ -219,18 +220,18 @@ main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px 
     .nav-link:hover svg { color: #ffffff; }
     .nav-link[aria-current='page'] { background: transparent; color: #ffffff; }
     .nav-link[aria-current='page'] svg { color: rgb(255 255 255 / 0.78); }
-    .nav-link.is-hot .ripple-dot { background: #2563c9; }
-    .nav-link.is-hot svg, .nav-link.is-hot:hover svg { color: #12326b; transform: scale(1.12); }
+    .nav-link.is-hot .ripple-dot { background: #ffffff; }
+    .nav-link.is-hot svg, .nav-link.is-hot:hover svg { color: #ffffff; transform: scale(1.12); }
     .nav-link .ripple-dot, .rail-add .ripple-dot { width: 48px !important; height: 48px !important; left: 16px !important; top: 0 !important; }
-    .rail-add .ripple-dot { left: 0 !important; background: #2563c9; }
+    .rail-add .ripple-dot { left: 0 !important; background: #ef5f18; }
     .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-    /* Tooltip with the page name, slides out beside the icon */
+    /* Names are always visible beside the rail; the current / hovered item's name turns orange and bold */
     .nav-link::after, a.rail-add::after {
-        content: attr(data-label); position: absolute; left: calc(100% + 14px); top: 50%; z-index: 60; padding: 6px 12px; border-radius: 9999px;
-        background: #12326b; color: #ffffff; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none;
-        opacity: 0; transform: translate(-6px, -50%); transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        content: attr(data-label); position: absolute; left: calc(100% + 14px); top: 50%; z-index: 5; padding: 0;
+        color: #261a66; font-size: 13px; font-weight: 500; white-space: nowrap; pointer-events: none;
+        transform: translate(0, -50%); transition: color 0.2s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    a.rail-add::after { left: calc(100% + 14px); }
-    .nav-link:hover::after, a.rail-add:hover::after, .nav-link:focus-visible::after, .nav-link.is-hot:hover::after { opacity: 1; transform: translate(0, -50%); }
+    a.rail-add::after { font-weight: 600; }
+    .nav-link.is-hot::after, a.rail-add:hover::after { color: #ef5f18; font-weight: 700; }
 }

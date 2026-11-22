@@ -50,7 +50,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#2563c9">
+    <meta name="theme-color" content="#261a66">
     <title>@yield('title', $title ?? '') · {{ $currentCompany->name }} · {{ config('app.name') }}</title>
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -103,7 +103,7 @@
         <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/40 peer-checked:block lg:peer-checked:hidden" aria-hidden="true"></label>
 
         {{-- Curved blue sidebar --}}
-        <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-indigo-600 px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-20 lg:w-[112px] lg:shrink-0 lg:translate-x-0 lg:overflow-visible lg:bg-transparent lg:px-4 lg:pb-8 lg:pt-2">
+        <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-ink px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-20 lg:w-[236px] lg:shrink-0 lg:translate-x-0 lg:overflow-visible lg:bg-transparent lg:px-4 lg:pb-8 lg:pt-2">
             <div class="rail">
                 <svg class="rail-svg" aria-hidden="true" focusable="false"><path d=""/></svg>
                 <span class="rail-bubble" aria-hidden="true"></span>

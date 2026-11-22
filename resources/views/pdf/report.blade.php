@@ -9,16 +9,16 @@
         .page-footer .right { float: right; }
         .pagenum:after { content: "Page " counter(page); }
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1e293b; }
-        h1 { font-size: 17px; margin: 0 0 2px; color: #1F55B0; }
-        .rule { border-top: 3px solid #1F55B0; margin: 6px 0 10px; }
+        h1 { font-size: 17px; margin: 0 0 2px; color: #261A66; }
+        .rule { border-top: 3px solid #261A66; margin: 6px 0 10px; }
         .meta { color: #64748b; margin-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; }
         thead { display: table-header-group; }
         tr { page-break-inside: avoid; }
-        th { background: #1F55B0; color: #ffffff; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: .5px; padding: 6px; }
-        td { padding: 5px 6px; border-bottom: 1px solid #dde5f3; }
+        th { background: #261A66; color: #ffffff; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: .5px; padding: 6px; }
+        td { padding: 5px 6px; border-bottom: 1px solid #E8E4F4; }
         .r { text-align: right; }
-        tfoot td { background: #EAF1FD; color: #1F55B0; font-weight: bold; border-top: 2px solid #1F55B0; border-bottom: 0; }
+        tfoot td { background: #FFF1E8; color: #261A66; font-weight: bold; border-top: 2px solid #261A66; border-bottom: 0; }
     </style>
 </head>
 <body>

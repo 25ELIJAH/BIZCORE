@@ -59,9 +59,9 @@ class ExportFilesTest extends TestCase
         $this->assertSame('A2', $ws->getFreezePane());
         $this->assertSame('A1:D3', $ws->getAutoFilter()->getRange(), 'filter covers data rows, not the totals row');
         $this->assertTrue($ws->getStyle('A4')->getFont()->getBold(), 'totals row bold');
-        $this->assertSame('1F55B0', $ws->getStyle('A1')->getFill()->getStartColor()->getRGB(), 'header uses the brand green');
+        $this->assertSame('261A66', $ws->getStyle('A1')->getFill()->getStartColor()->getRGB(), 'header uses the brand green');
         $this->assertSame('FFFFFF', $ws->getStyle('A1')->getFont()->getColor()->getRGB(), 'header text is white on the green fill');
-        $this->assertSame('EAF1FD', $ws->getStyle('A4')->getFill()->getStartColor()->getRGB(), 'totals row is tinted');
+        $this->assertSame('FFF1E8', $ws->getStyle('A4')->getFill()->getStartColor()->getRGB(), 'totals row is tinted');
 
         $this->assertSame('yyyy-mm-dd', $ws->getStyle('A2')->getNumberFormat()->getFormatCode());
         $this->assertSame('2026-03-05', Date::excelToDateTimeObject($ws->getCell('A2')->getValue())->format('Y-m-d'), 'a real date, not text');

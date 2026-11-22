@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#2563c9">
+    <meta name="theme-color" content="#261a66">
     <title>@yield('title', 'Sign in') · {{ config('app.name') }}</title>
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -12,7 +12,7 @@
 <div class="min-h-screen lg:flex lg:items-center lg:justify-center lg:p-6">
     <div class="grid w-full max-w-5xl overflow-hidden bg-white lg:min-h-[600px] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]">
         {{-- Blue panel with the curved edge --}}
-        <aside class="hidden flex-col justify-between bg-indigo-600 p-10 text-white lg:flex lg:rounded-tr-[72px]">
+        <aside class="hidden flex-col justify-between bg-ink p-10 text-white lg:flex lg:rounded-tr-[72px]">
             <div class="flex items-center gap-3">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base font-bold text-indigo-600">B</span>
                 <span class="text-xl font-bold">{{ config('app.name') }}</span>

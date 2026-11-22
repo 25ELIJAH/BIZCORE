@@ -45,16 +45,16 @@ class Dashboard extends Component
 
         if (isset($d['sales'])) {
             $charts['sales'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['trend']['labels'], 'datasets' => [[
-                'label' => 'Sales', 'data' => $num($d['sales']['trend']['values']), 'backgroundColor' => '#2563c9', 'borderRadius' => 4,
+                'label' => 'Sales', 'data' => $num($d['sales']['trend']['values']), 'backgroundColor' => '#ef5f18', 'borderRadius' => 4,
             ]]], 'options' => $this->options()];
             $charts['top'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['top_products']['labels'], 'datasets' => [[
-                'label' => 'Revenue this month', 'data' => $num($d['sales']['top_products']['values']), 'backgroundColor' => '#5f8be6', 'borderRadius' => 4,
+                'label' => 'Revenue this month', 'data' => $num($d['sales']['top_products']['values']), 'backgroundColor' => '#261a66', 'borderRadius' => 4,
             ]]], 'options' => $this->options(['indexAxis' => 'y', 'scales' => ['x' => ['beginAtZero' => true]]])];
         }
         if (isset($d['finance'])) {
             $charts['finance'] = ['type' => 'bar', 'data' => ['labels' => $d['finance']['income_trend']['labels'], 'datasets' => [
-                ['label' => 'Income', 'data' => $num($d['finance']['income_trend']['values']), 'backgroundColor' => '#2563c9', 'borderRadius' => 4],
-                ['label' => 'Expenses', 'data' => $num($d['finance']['expense_trend']['values']), 'backgroundColor' => '#f43f5e', 'borderRadius' => 4],
+                ['label' => 'Income', 'data' => $num($d['finance']['income_trend']['values']), 'backgroundColor' => '#ef5f18', 'borderRadius' => 4],
+                ['label' => 'Expenses', 'data' => $num($d['finance']['expense_trend']['values']), 'backgroundColor' => '#261a66', 'borderRadius' => 4],
             ]], 'options' => $this->options()];
         }
 
