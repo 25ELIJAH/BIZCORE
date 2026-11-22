@@ -54,6 +54,7 @@ class LoginController extends Controller
 
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
+        $request->session()->forget(\App\Support\TwoFactor::SESSION_KEY);
 
         /** @var User $user */
         $user = Auth::user();

@@ -39,12 +39,22 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // Second step (authenticator app). These sit outside the two-factor middleware so people can reach them.
+    Route::get('two-factor/setup', [\App\Http\Controllers\Auth\TwoFactorController::class, 'setup'])->name('two-factor.setup');
+    Route::post('two-factor/setup', [\App\Http\Controllers\Auth\TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+    Route::get('two-factor/recovery-codes', [\App\Http\Controllers\Auth\TwoFactorController::class, 'recovery'])->name('two-factor.recovery');
+    Route::get('two-factor/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('two-factor/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'verify'])->name('two-factor.verify');
+
+    Route::middleware('two-factor')->group(function () {
     Route::get('no-company', [CompanySwitchController::class, 'none'])->name('company.none');
 
     // Everything below runs inside a validated company context.
     Route::middleware('company')->group(function () {
         Route::get('/', Dashboard::class)->name('home');
         Route::post('company/switch', [CompanySwitchController::class, 'store'])->name('company.switch');
+        Route::get('account', \App\Livewire\Account\Index::class)->name('account');
 
         Route::prefix('inventory')->name('inventory.')->middleware('can:inventory.view')->group(function () {
             Route::get('products', Products::class)->name('products');
@@ -88,5 +98,6 @@ Route::middleware('auth')->group(function () {
             Route::get('{sale}', SalesShow::class)->name('show');
             Route::get('{sale}/invoice', [InvoiceController::class, 'show'])->name('invoice');
         });
+    });
     });
 });

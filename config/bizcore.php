@@ -20,6 +20,8 @@ return [
     'default_payment_terms_days' => 30,
 
     // Demo seeders only run locally. A hosted demo must opt in explicitly and should set its own password.
+    'two_factor_required' => (bool) env('TWO_FACTOR_REQUIRED', true),
+
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
     'demo_password' => env('DEMO_PASSWORD', 'password'),
 ];
