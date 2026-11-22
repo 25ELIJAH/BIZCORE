@@ -360,7 +360,7 @@ class HrServiceTest extends TestCase
     public function test_started_leave_cannot_be_cancelled(): void
     {
         $e = $this->employee();
-        $req = $this->leave->request($e, 'sick', today()->subDay(), today()->subDay());
+        $req = $this->leave->request($e, 'sick', today()->subWeekday(), today()->subWeekday());
         $this->actingAs($this->userWithRole('manager', $this->company));
         $this->leave->approve($req);
 

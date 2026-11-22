@@ -15,7 +15,7 @@ class CompanyFactory extends Factory
             'registration_number' => fake()->unique()->bothify('REG-#######'),
             'address' => fake()->address(),
             'email' => fake()->companyEmail(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => '+254 7'.fake()->numerify('## ### ###'),
             'currency' => 'KES',
             'is_active' => true,
         ];
