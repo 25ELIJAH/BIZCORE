@@ -37,8 +37,8 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! app()->environment('local')) {
-            $this->command?->warn('DemoDataSeeder skipped: only runs in the local environment.');
+        if (! (app()->environment('local') || config('bizcore.allow_demo_seed'))) {
+            $this->command?->warn('DemoDataSeeder skipped: only runs in the local environment (or with ALLOW_DEMO_SEED=true).');
 
             return;
         }
