@@ -30,8 +30,8 @@
             <div class="w-full max-w-sm">
                 <div class="mb-8">
                     <x-brand class="mb-6 lg:hidden" />
-                    <h1 class="text-3xl font-bold text-indigo-600">Sign in</h1>
-                    <p class="mt-1 text-sm text-slate-500">Enter your details to access your account.</p>
+                    <h1 class="text-3xl font-bold text-indigo-600">@yield('heading', 'Sign in')</h1>
+                    <p class="mt-1 text-sm text-slate-500">@yield('subheading', 'Enter your details to access your account.')</p>
                 </div>
                 @if (session('status'))
                     <p class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{{ session('status') }}</p>

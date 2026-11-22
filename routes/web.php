@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);
+    Route::get('register', [\App\Http\Controllers\Auth\RegisterController::class, 'create'])->name('register');
+    Route::post('register', [\App\Http\Controllers\Auth\RegisterController::class, 'store'])->middleware('throttle:5,60');
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('forgot-password', [PasswordResetController::class, 'email'])->name('password.email');
     Route::get('reset-password/{token}', [PasswordResetController::class, 'reset'])->name('password.reset');
@@ -55,6 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', Dashboard::class)->name('home');
         Route::post('company/switch', [CompanySwitchController::class, 'store'])->name('company.switch');
         Route::get('account', \App\Livewire\Account\Index::class)->name('account');
+        Route::get('company', \App\Livewire\Company\Settings::class)->name('company.settings')->middleware('can:manage-company');
+        Route::get('team', \App\Livewire\Company\Team::class)->name('company.team')->middleware('can:manage-company');
 
         Route::prefix('inventory')->name('inventory.')->middleware('can:inventory.view')->group(function () {
             Route::get('products', Products::class)->name('products');

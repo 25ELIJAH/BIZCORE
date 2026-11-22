@@ -22,6 +22,8 @@
         'Overview' => [
             ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'home', 'can' => 'dashboard.view', 'active' => 'home'],
             ['label' => 'Activity', 'icon' => 'attendance', 'route' => 'activity', 'can' => 'activity_logs.view', 'active' => 'activity'],
+            ['label' => 'Company', 'icon' => 'categories', 'route' => 'company.settings', 'can' => 'manage-company', 'active' => 'company.settings'],
+            ['label' => 'Team', 'icon' => 'employees', 'route' => 'company.team', 'can' => 'manage-company', 'active' => 'company.team'],
         ],
         'Trade' => [
             ['label' => 'Sales', 'icon' => 'sales', 'route' => 'sales.index', 'can' => 'sales.view', 'active' => 'sales.*'],

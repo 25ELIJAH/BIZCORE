@@ -22,6 +22,9 @@ return [
     // Demo seeders only run locally. A hosted demo must opt in explicitly and should set its own password.
     'two_factor_required' => (bool) env('TWO_FACTOR_REQUIRED', true),
 
+    // Lets a new business create its own company from the sign-in page. Set SELF_SIGNUP=false to onboard companies by hand only.
+    'self_signup' => (bool) env('SELF_SIGNUP', true),
+
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
     'demo_password' => env('DEMO_PASSWORD', 'password'),
 ];

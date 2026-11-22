@@ -20,5 +20,6 @@
         <a href="{{ route('password.request') }}" class="text-indigo-600 hover:underline">Forgot password?</a>
     </div>
     <button type="submit" class="btn-primary w-full !py-2.5">Sign in</button>
+    @if (config('bizcore.self_signup'))<p class="text-center text-sm text-slate-500">New business? <a href="{{ route('register') }}" class="text-indigo-600 hover:underline">Create a company account</a></p>@endif
 </form>
 @endsection
