@@ -5,23 +5,26 @@
     <title>{{ $sale->invoice->invoice_number }}</title>
     <style>
         @page { margin: 34px 38px 52px 38px; }
-        .page-footer { position: fixed; bottom: -32px; left: 0; right: 0; color: #94a3b8; font-size: 9px; border-top: 1px solid #e2e8f0; padding-top: 5px; }
+        .page-footer { position: fixed; bottom: -32px; left: 0; right: 0; color: #64748b; font-size: 9px; border-top: 1px solid #cbd5e1; padding-top: 5px; }
         .page-footer .right { float: right; }
         .pagenum:after { content: "Page " counter(page); }
         .keep { page-break-inside: avoid; }
         thead { display: table-header-group; }
         .items tr { page-break-inside: avoid; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; }
-        h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: 1px; }
+        .brand { color: #0C4137; }
+        .rule { height: 0; border-top: 3px solid #0C4137; margin: 0 0 18px; }
+        .accent { display: inline-block; width: 46px; height: 3px; background: #06D6A0; }
+        h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 2px; color: #0C4137; }
         table { width: 100%; border-collapse: collapse; }
         .muted { color: #64748b; }
         .right { text-align: right; }
-        .items th { background: #f1f5f9; text-align: left; padding: 7px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
-        .items td { padding: 7px 8px; border-bottom: 1px solid #e2e8f0; }
+        .items th { background: #0C4137; color: #ffffff; text-align: left; padding: 8px; font-size: 9px; text-transform: uppercase; letter-spacing: .6px; }
+        .items td { padding: 8px; border-bottom: 1px solid #dbe5e2; }
         .totals td { padding: 4px 8px; }
-        .grand td { border-top: 2px solid #1e293b; font-size: 13px; font-weight: bold; padding-top: 7px; }
-        .badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 10px; font-weight: bold; }
-        .paid { background: #d1fae5; color: #047857; } .due { background: #e0f2fe; color: #0369a1; } .cancelled { background: #e2e8f0; color: #475569; } .overdue { background: #fee2e2; color: #b91c1c; }
+        .grand td { background: #E6FBF6; color: #0C4137; border-top: 2px solid #0C4137; font-size: 13px; font-weight: bold; padding: 8px; }
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
+        .paid { background: #E6FBF6; color: #0C4137; border: 1px solid #06D6A0; } .due { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; } .cancelled { background: #e2e8f0; color: #475569; } .overdue { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -34,7 +37,7 @@
     <tr>
         <td style="width:60%; vertical-align: top;">
             @if ($logo)<img src="{{ $logo }}" alt="" style="max-height: 55px; margin-bottom: 8px;"><br>@endif
-            <strong style="font-size: 15px;">{{ $company->name }}</strong><br>
+            <strong class="brand" style="font-size: 16px;">{{ $company->name }}</strong><br>
             <span class="muted">
                 {!! nl2br(e($company->address)) !!}<br>
                 @if ($company->email){{ $company->email }}<br>@endif
@@ -43,7 +46,7 @@
             </span>
         </td>
         <td class="right" style="vertical-align: top;">
-            <h1>INVOICE</h1>
+            <h1>INVOICE</h1><span class="accent"></span><br><br>
             <strong>{{ $sale->invoice->invoice_number }}</strong><br>
             <span class="badge {{ $label[1] }}">{{ $label[0] }}</span><br><br>
             <span class="muted">Issued:</span> {{ $sale->invoice->issue_date->format('d M Y') }}<br>
@@ -52,7 +55,8 @@
     </tr>
 </table>
 
-<p style="margin: 22px 0 4px;" class="muted">BILL TO</p>
+<div class="rule" style="margin-top: 16px;"></div>
+<p style="margin: 0 0 4px; font-size: 9px; letter-spacing: .8px; color: #0C4137;"><strong>BILL TO</strong></p>
 <strong>{{ $sale->customer?->name ?? 'Walk-in customer' }}</strong><br>
 @if ($sale->customer)
     <span class="muted">{!! nl2br(e($sale->customer->address)) !!}@if ($sale->customer->email)<br>{{ $sale->customer->email }}@endif @if ($sale->customer->tax_number)<br>Tax no. {{ $sale->customer->tax_number }}@endif</span>
@@ -87,7 +91,7 @@
 </table>
 
 @if ($sale->payments->isNotEmpty())
-    <p class="muted" style="margin: 18px 0 4px;">PAYMENTS RECEIVED</p>
+    <p style="margin: 18px 0 4px; font-size: 9px; letter-spacing: .8px; color: #0C4137;"><strong>PAYMENTS RECEIVED</strong></p>
     @foreach ($sale->payments as $payment)
         {{ $payment->paid_at->format('d M Y') }} · {{ $methods[$payment->method] ?? $payment->method }} · {{ $money($payment->amount) }}@if ($payment->reference) · Ref {{ $payment->reference }}@endif<br>
     @endforeach
