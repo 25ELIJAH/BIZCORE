@@ -57,10 +57,10 @@ class ReportPagesTest extends TestCase
 
         $this->actAs('sales-officer');
         Livewire::test(Dashboard::class)->assertSee('Sales this month')->assertSee('100.00')
-            ->assertDontSee('Finance (this month)')->assertDontSee('Procurement')->assertDontSee('Active employees');
+            ->assertDontSee('Expenses')->assertDontSee('Procurement')->assertDontSee('Active employees');
 
         $this->actAs('accountant');
-        Livewire::test(Dashboard::class)->assertSee('Finance (this month)')->assertDontSee('Stock value');
+        Livewire::test(Dashboard::class)->assertSee('Expenses')->assertSee('Net')->assertDontSee('Stock value');
 
         $this->actAs('inventory-officer');
         Livewire::test(Dashboard::class)->assertSee('Stock value')->assertDontSee('Sales this month');
