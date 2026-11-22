@@ -33,37 +33,6 @@ class Dashboard extends Component
             'company' => $company,
             'data' => $data,
             'currency' => $company->currency,
-            'charts' => $this->charts($data),
         ]);
-    }
-
-    /** Chart.js configurations, built server-side from the already-authorised data. */
-    private function charts(array $d): array
-    {
-        $charts = [];
-        $num = fn (array $values) => array_map('floatval', $values);
-
-        if (isset($d['sales'])) {
-            $charts['sales'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['trend']['labels'], 'datasets' => [[
-                'label' => 'Sales', 'data' => $num($d['sales']['trend']['values']), 'backgroundColor' => '#ef5f18', 'borderRadius' => 4,
-            ]]], 'options' => $this->options()];
-            $charts['top'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['top_products']['labels'], 'datasets' => [[
-                'label' => 'Revenue this month', 'data' => $num($d['sales']['top_products']['values']), 'backgroundColor' => '#261a66', 'borderRadius' => 4,
-            ]]], 'options' => $this->options(['indexAxis' => 'y', 'scales' => ['x' => ['beginAtZero' => true]]])];
-        }
-        if (isset($d['finance'])) {
-            $charts['finance'] = ['type' => 'bar', 'data' => ['labels' => $d['finance']['income_trend']['labels'], 'datasets' => [
-                ['label' => 'Income', 'data' => $num($d['finance']['income_trend']['values']), 'backgroundColor' => '#ef5f18', 'borderRadius' => 4],
-                ['label' => 'Expenses', 'data' => $num($d['finance']['expense_trend']['values']), 'backgroundColor' => '#261a66', 'borderRadius' => 4],
-            ]], 'options' => $this->options()];
-        }
-
-        return $charts;
-    }
-
-    private function options(array $extra = []): array
-    {
-        return $extra + ['responsive' => true, 'maintainAspectRatio' => false, 'plugins' => ['legend' => ['display' => true, 'position' => 'bottom']],
-            'scales' => ['y' => ['beginAtZero' => true]]];
     }
 }

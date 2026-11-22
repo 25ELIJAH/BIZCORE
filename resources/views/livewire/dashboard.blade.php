@@ -34,20 +34,75 @@
         </div>
     @endif
 
-    {{-- Trends --}}
-    @if (isset($data['sales']) || isset($data['finance']))
-        <h2 class="mb-3 mt-2 text-[13px] font-semibold uppercase tracking-wide text-slate-900">Trends</h2>
-        <div class="mb-8 grid gap-4 lg:grid-cols-2">
-            @isset($data['sales'])
-                <section class="{{ $tile }}"><h3 class="mb-3 text-sm font-semibold">Sales, last 6 months</h3><div class="h-64" wire:ignore><canvas data-chart='@json($charts['sales'])' role="img" aria-label="Bar chart of monthly sales for the last six months"></canvas></div></section>
-                <section class="{{ $tile }}"><h3 class="mb-3 text-sm font-semibold">Top products this month</h3>
-                    @if ($data['sales']['top_products']['labels'])<div class="h-64" wire:ignore><canvas data-chart='@json($charts['top'])' role="img" aria-label="Bar chart of top selling products this month"></canvas></div>
-                    @else<p class="py-16 text-center text-sm text-slate-500">No sales this month yet.</p>@endif
+    {{-- What needs the admin's attention right now --}}
+    @php
+        $aging = $data['sales']['aging'] ?? null;
+        $agingTotal = $aging ? array_sum(array_map('floatval', $aging)) : 0;
+        $buckets = $aging ? [
+            ['Not yet due', $aging['current'], 'bg-slate-300'],
+            ['1 – 30 days late', $aging['d30'], 'bg-orange-300'],
+            ['31 – 60 days late', $aging['d60'], 'bg-orange-500'],
+            ['Over 60 days late', $aging['d90'], 'bg-ink'],
+        ] : [];
+        $decisions = array_filter([
+            isset($data['procurement']) && $data['procurement']['awaiting_approval'] ? ['Purchase orders awaiting approval', $data['procurement']['awaiting_approval'], route('purchase-orders.index')] : null,
+            isset($data['hr']) && $data['hr']['pending_leave'] ? ['Leave requests awaiting a decision', $data['hr']['pending_leave'], route('hr.leave')] : null,
+            isset($data['procurement']) && $data['procurement']['awaiting_delivery'] ? ['Purchase orders awaiting delivery', $data['procurement']['awaiting_delivery'], route('purchase-orders.index')] : null,
+        ]);
+    @endphp
+    @if ($aging || isset($data['inventory']) || isset($data['procurement']) || isset($data['hr']))
+        <h2 class="mb-3 mt-2 text-[13px] font-semibold uppercase tracking-wide text-slate-900">Needs your attention</h2>
+        <div class="mb-9 grid gap-5 lg:grid-cols-2">
+            @if ($aging)
+                <section class="{{ $tile }}">
+                    <h3 class="mb-1 text-sm font-semibold">Money customers owe, by age</h3>
+                    <p class="mb-4 text-xs text-slate-500">Total outstanding {{ $currency }} {{ $money($agingTotal) }}</p>
+                    <div class="mb-4 flex h-3 overflow-hidden rounded-full bg-slate-200" role="img" aria-label="Outstanding invoices by how late they are">
+                        @foreach ($buckets as [$name, $amount, $colour])
+                            @if ($agingTotal > 0 && (float) $amount > 0)<div class="{{ $colour }}" style="width: {{ round((float) $amount / $agingTotal * 100, 1) }}%"></div>@endif
+                        @endforeach
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        @foreach ($buckets as [$name, $amount, $colour])
+                            <li class="flex items-center justify-between gap-3"><span class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full {{ $colour }}"></span>{{ $name }}</span><strong>{{ $currency }} {{ $money($amount) }}</strong></li>
+                        @endforeach
+                    </ul>
+                </section>
+                <section class="{{ $tile }}">
+                    <div class="mb-3 flex items-center justify-between"><h3 class="text-sm font-semibold">Largest overdue invoices</h3><a href="{{ route('sales.index') }}" class="text-xs font-medium text-slate-500 underline-offset-2 hover:underline">All sales</a></div>
+                    @forelse ($data['sales']['overdue'] as $row)
+                        <a href="{{ route('sales.show', $row['id']) }}" class="flex items-center justify-between gap-3 border-t border-slate-200 py-2.5 text-sm first:border-t-0 hover:text-slate-900">
+                            <span class="min-w-0"><span class="block truncate font-medium">{{ $row['customer'] }}</span><span class="text-xs text-slate-500">{{ $row['number'] }} &middot; {{ $row['days'] }} day(s) late</span></span>
+                            <strong class="whitespace-nowrap">{{ $currency }} {{ $money($row['balance']) }}</strong>
+                        </a>
+                    @empty
+                        <p class="py-6 text-center text-sm text-slate-500">No overdue invoices. Everything is on time.</p>
+                    @endforelse
+                </section>
+            @endif
+            @isset($data['inventory'])
+                <section class="{{ $tile }}">
+                    <div class="mb-3 flex items-center justify-between"><h3 class="text-sm font-semibold">Running low on stock</h3><a href="{{ route('inventory.products') }}" class="text-xs font-medium text-slate-500 underline-offset-2 hover:underline">All products</a></div>
+                    @forelse ($data['inventory']['low_list'] as $row)
+                        <div class="flex items-center justify-between gap-3 border-t border-slate-200 py-2.5 text-sm first:border-t-0">
+                            <span class="min-w-0"><span class="block truncate font-medium">{{ $row['name'] }}</span><span class="text-xs text-slate-500">{{ $row['sku'] }}</span></span>
+                            <span class="whitespace-nowrap text-right"><strong class="text-red-700">{{ rtrim(rtrim($row['quantity'], '0'), '.') ?: '0' }}</strong> <span class="text-xs text-slate-500">left &middot; reorder at {{ rtrim(rtrim($row['min'], '0'), '.') }}</span></span>
+                        </div>
+                    @empty
+                        <p class="py-6 text-center text-sm text-slate-500">Every product is above its reorder level.</p>
+                    @endforelse
                 </section>
             @endisset
-            @isset($data['finance'])
-                <section class="{{ $tile }} lg:col-span-2"><h3 class="mb-3 text-sm font-semibold">Income and expenses, last 6 months</h3><div class="h-64" wire:ignore><canvas data-chart='@json($charts['finance'])' role="img" aria-label="Bar chart comparing monthly income and expenses"></canvas></div></section>
-            @endisset
+            @if (isset($data['procurement']) || isset($data['hr']))
+                <section class="{{ $tile }}">
+                    <h3 class="mb-3 text-sm font-semibold">Waiting on a decision</h3>
+                    @forelse ($decisions as [$name, $count, $url])
+                        <a href="{{ $url }}" class="flex items-center justify-between gap-3 border-t border-slate-200 py-2.5 text-sm first:border-t-0 hover:text-slate-900"><span class="text-slate-600">{{ $name }}</span><span class="badge bg-ink text-white">{{ $count }}</span></a>
+                    @empty
+                        <p class="py-6 text-center text-sm text-slate-500">Nothing is waiting on you.</p>
+                    @endforelse
+                </section>
+            @endif
         </div>
     @endif
 

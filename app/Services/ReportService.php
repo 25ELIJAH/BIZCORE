@@ -270,6 +270,8 @@ class ReportService
                 'overdue_count' => Sale::overdue()->count(),
                 'trend' => $this->monthlySeries(Sale::query()->where('status', Sale::STATUS_COMPLETED), 'sale_date', 'total', $now),
                 'top_products' => $this->topProducts($monthStart, $now),
+                'aging' => $this->receivablesAging($now),
+                'overdue' => $this->overdueInvoices($now),
             ];
         }
 
@@ -287,6 +289,8 @@ class ReportService
                 'value' => Money::round((string) Product::where('is_active', true)->selectRaw('COALESCE(SUM(quantity * average_cost), 0) as v')->value('v')),
                 'low_stock' => Product::where('is_active', true)->lowStock()->count(),
                 'products' => Product::where('is_active', true)->count(),
+                'low_list' => Product::where('is_active', true)->lowStock()->orderBy('quantity')->limit(5)->get(['id', 'name', 'sku', 'quantity', 'min_stock'])
+                    ->map(fn ($p) => ['name' => $p->name, 'sku' => $p->sku, 'quantity' => $p->quantity, 'min' => $p->min_stock])->all(),
             ];
         }
 
@@ -307,6 +311,36 @@ class ReportService
         }
 
         return $out;
+    }
+
+    /**
+     * Money customers still owe, split by how long past due it is.
+     *
+     * @return array{current: string, d30: string, d60: string, d90: string}
+     */
+    private function receivablesAging(Carbon $now): array
+    {
+        $today = $now->toDateString();
+        $row = Sale::where('status', Sale::STATUS_COMPLETED)->where('payment_status', '!=', Sale::PAYMENT_PAID)
+            ->selectRaw('COALESCE(SUM(CASE WHEN due_date >= ? THEN total - amount_paid ELSE 0 END), 0) as current_b, '
+                .'COALESCE(SUM(CASE WHEN DATEDIFF(?, due_date) BETWEEN 1 AND 30 THEN total - amount_paid ELSE 0 END), 0) as d30, '
+                .'COALESCE(SUM(CASE WHEN DATEDIFF(?, due_date) BETWEEN 31 AND 60 THEN total - amount_paid ELSE 0 END), 0) as d60, '
+                .'COALESCE(SUM(CASE WHEN DATEDIFF(?, due_date) > 60 THEN total - amount_paid ELSE 0 END), 0) as d90', [$today, $today, $today, $today])
+            ->first();
+
+        return ['current' => Money::round((string) $row->current_b), 'd30' => Money::round((string) $row->d30),
+            'd60' => Money::round((string) $row->d60), 'd90' => Money::round((string) $row->d90)];
+    }
+
+    /** The five largest overdue invoices. */
+    private function overdueInvoices(Carbon $now): array
+    {
+        return Sale::overdue()->with(['customer:id,name', 'invoice:id,sale_id,invoice_number'])
+            ->orderByRaw('(total - amount_paid) desc')->limit(5)->get()
+            ->map(fn (Sale $s) => [
+                'id' => $s->id, 'number' => $s->invoice?->invoice_number ?? ('Sale #'.$s->id), 'customer' => $s->customer?->name ?? 'Walk-in customer',
+                'balance' => $s->balance(), 'days' => (int) $s->due_date->diffInDays($now->copy()->startOfDay()),
+            ])->all();
     }
 
     /**

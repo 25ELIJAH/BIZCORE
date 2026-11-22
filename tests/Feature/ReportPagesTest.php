@@ -76,16 +76,17 @@ class ReportPagesTest extends TestCase
         Livewire::test(Dashboard::class)->assertSee('nothing to show')->assertDontSee('Sales this month');
     }
 
-    public function test_dashboard_emits_chart_configuration_for_chartjs(): void
+    public function test_dashboard_shows_the_attention_overview(): void
     {
         $this->sale('Widget');
         $this->actAs('company-administrator');
 
-        $html = Livewire::test(Dashboard::class)->html();
-
-        $this->assertStringContainsString('data-chart=', $html);
-        $this->assertStringContainsString('Bar chart of monthly sales', $html);
-        $this->assertStringContainsString('Widget', $html); // top products label
+        Livewire::test(Dashboard::class)
+            ->assertSee('Needs your attention')
+            ->assertSee('Money customers owe, by age')
+            ->assertSee('Largest overdue invoices')
+            ->assertSee('Running low on stock')
+            ->assertDontSee('data-chart');
     }
 
     public function test_dashboard_is_isolated_per_company(): void

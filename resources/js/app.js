@@ -90,7 +90,7 @@ document.addEventListener('pointerdown', (e) => {
 
 // Desktop icon rail: the dark pill is drawn as one smooth SVG path with a round notch cut around the active item.
 // The notch (and its bubble) glides from the previous page's item to the current one.
-const RAIL = { w: 208, r: 35, f: 12, cx: 22, corner: 40 }; // pill width, notch radius, fillet radius, notch centre x (from the left edge), corner radius
+const RAIL = { w: 208, r: 35, f: 12, cx: 22, corner: 40 }; // pill width, notch radius, fillet radius, notch centre x (from the edge the notch is on), corner radius; the SVG is mirrored in CSS so the notch sits on the right
 
 function railPath(h, cy) {
     const { w, r, f, cx, corner: k0 } = RAIL;
@@ -143,6 +143,8 @@ function railNotch() {
     glide(active);
     if (!rail._bound) {
         rail._bound = true;
+        // Keep the pill the same height as the page area when the content grows or shrinks.
+        new ResizeObserver(() => { if (Number.isFinite(rail._cy)) path.setAttribute('d', railPath(rail.offsetHeight, rail._cy)); }).observe(rail);
         // Hover moves the notch to the hovered item; leaving returns it to the current page. Clicking keeps it there.
         rail.addEventListener('mouseover', (e) => {
             const link = e.target.closest('.nav-link');
