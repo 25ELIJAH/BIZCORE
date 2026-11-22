@@ -1,7 +1,7 @@
 @extends('layouts.guest')
 @section('title', 'Sign in')
 @section('content')
-<form method="POST" action="{{ route('login') }}" class="space-y-4">
+<form method="POST" action="{{ route('login') }}" class="auth-form space-y-4">
     @csrf
     <div>
         <label for="email" class="mb-1 block text-sm font-medium">Email</label>

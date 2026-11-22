@@ -62,6 +62,13 @@ document.addEventListener('pointerdown', (e) => {
     setTimeout(() => dot.remove(), 650);
 });
 
+// Sign-in / sign-up: the submit button shows a spinner the moment the form is sent.
+document.addEventListener('submit', (e) => {
+    const form = e.target.closest?.('.auth-form');
+    const button = form?.querySelector('button[type="submit"]');
+    if (button) button.classList.add('is-loading');
+});
+
 // Desktop icon rail: the dark pill is drawn as one smooth SVG path with a round notch cut around the active item.
 // The notch (and its bubble) glides from the previous page's item to the current one.
 const RAIL = { w: 208, r: 35, f: 12, cx: 22, corner: 40 }; // pill width, notch radius, fillet radius, notch centre x (from the edge the notch is on), corner radius; the SVG is mirrored in CSS so the notch sits on the right

@@ -3,7 +3,7 @@
 @section('heading', 'Create your company')
 @section('subheading', 'Set up BIZCORE for your business in a minute. You become its administrator.')
 @section('content')
-<form method="POST" action="{{ route('register') }}" class="space-y-4">
+<form method="POST" action="{{ route('register') }}" class="auth-form space-y-4">
     @csrf
     <div class="hidden" aria-hidden="true"><label>Leave this empty <input type="text" name="contact_url" tabindex="-1" autocomplete="off"></label></div>
     <div>

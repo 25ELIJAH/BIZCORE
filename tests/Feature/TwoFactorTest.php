@@ -87,4 +87,20 @@ class TwoFactorTest extends TestCase
         $this->post(route('two-factor.verify'), ['code' => '111111'])->assertSessionHasErrors('code');
         $this->assertStringContainsString('Too many', session('errors')->first('code'));
     }
+
+    public function test_every_sign_in_asks_for_a_code_even_with_remember_me(): void
+    {
+        $secret = (new Google2FA)->generateSecretKey();
+        $this->user->forceFill(['password' => 'Secret123', 'two_factor_secret' => $secret, 'two_factor_confirmed_at' => now()])->save();
+        auth()->logout();
+
+        for ($i = 0; $i < 2; $i++) {
+            $this->flushSession();
+            $this->post(route('login'), ['email' => $this->user->email, 'password' => 'Secret123', 'remember' => '1'])->assertRedirect();
+            $this->get(route('home'))->assertRedirect(route('two-factor.challenge'));
+            $this->post(route('two-factor.verify'), ['code' => $this->code($secret)])->assertRedirect();
+            $this->get(route('home'))->assertOk();
+            $this->post(route('logout'));
+        }
+    }
 }

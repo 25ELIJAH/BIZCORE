@@ -1,7 +1,7 @@
 @extends('layouts.guest')
 @section('title', 'Reset password')
 @section('content')
-<form method="POST" action="{{ route('password.update') }}" class="space-y-4">
+<form method="POST" action="{{ route('password.update') }}" class="auth-form space-y-4">
     @csrf
     <input type="hidden" name="token" value="{{ $token }}">
     <div>

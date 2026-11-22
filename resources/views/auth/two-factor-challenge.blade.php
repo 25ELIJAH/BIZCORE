@@ -2,7 +2,7 @@
 @section('title', 'Verification code')
 @section('content')
 <p class="mb-5 text-sm text-slate-600">Open your authenticator app and enter the 6-digit code for BIZCORE ERP.</p>
-<form method="POST" action="{{ route('two-factor.verify') }}" class="space-y-4">
+<form method="POST" action="{{ route('two-factor.verify') }}" class="auth-form space-y-4">
     @csrf
     <div>
         <label for="code" class="mb-1 block text-sm font-medium">Verification code</label>

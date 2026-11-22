@@ -2,7 +2,7 @@
 @section('title', 'Forgot password')
 @section('content')
 <p class="mb-4 text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
-<form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+<form method="POST" action="{{ route('password.email') }}" class="auth-form space-y-4">
     @csrf
     <div>
         <label for="email" class="mb-1 block text-sm font-medium">Email</label>
