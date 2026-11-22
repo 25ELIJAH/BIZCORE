@@ -5,10 +5,10 @@
     $label = 'text-xs font-medium text-slate-500';
 @endphp
 <div>
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-2 border-b border-slate-200 pb-4">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-2">
         <div>
             <p class="{{ $label }}">Currently managing</p>
-            <h1 class="mt-0.5 text-2xl font-semibold text-slate-900">{{ $company->name }}</h1>
+            <h1 class="mt-0.5">{{ $company->name }}</h1>
         </div>
         <p class="text-sm text-slate-500">Currency {{ $currency }} &middot; figures update each time you open this page.</p>
     </div>
@@ -19,10 +19,10 @@
 
     {{-- Headline figures: the numbers an owner looks at first --}}
     @if (isset($data['sales']) || isset($data['finance']))
-        <h2 class="mb-3 text-sm font-semibold text-slate-900">Key figures <span class="font-normal text-slate-500">&middot; this month</span></h2>
-        <div class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" >
+        <h2 class="mb-3 mt-2 text-[13px] font-semibold uppercase tracking-wide text-slate-900">Quick access <span class="font-normal normal-case tracking-normal text-slate-500">&middot; this month</span></h2>
+        <div class="mb-9 grid gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-3" >
             @isset($data['sales'])
-                <div class="{{ $kpi }}"><p class="{{ $label }}">Sales this month</p><p class="mt-1.5 text-2xl font-semibold text-slate-900">{{ $currency }} <span data-count="{{ (float) $data['sales']['month_total'] }}" data-decimals="2">{{ $money($data['sales']['month_total']) }}</span></p><p class="mt-1 text-xs text-slate-500">{{ $data['sales']['month_count'] }} sale(s)</p></div>
+                <div class="{{ $kpi }} is-primary"><p class="{{ $label }}">Sales this month</p><p class="mt-1.5 text-2xl font-semibold text-slate-900">{{ $currency }} <span data-count="{{ (float) $data['sales']['month_total'] }}" data-decimals="2">{{ $money($data['sales']['month_total']) }}</span></p><p class="mt-1 text-xs text-slate-500">{{ $data['sales']['month_count'] }} sale(s)</p></div>
                 <div class="{{ $kpi }}"><p class="{{ $label }}">Customers owe you</p><p class="mt-1.5 text-2xl font-semibold text-slate-900">{{ $currency }} <span data-count="{{ (float) $data['sales']['receivable'] }}" data-decimals="2">{{ $money($data['sales']['receivable']) }}</span></p></div>
                 <div class="{{ $kpi }}"><p class="{{ $label }}">Overdue invoices</p><p class="mt-1.5 text-2xl font-semibold text-slate-900 {{ $data['sales']['overdue_count'] ? 'text-red-600' : '' }}">{{ $data['sales']['overdue_count'] }}</p></div>
             @endisset
@@ -36,7 +36,7 @@
 
     {{-- Trends --}}
     @if (isset($data['sales']) || isset($data['finance']))
-        <h2 class="mb-3 text-sm font-semibold text-slate-900">Trends</h2>
+        <h2 class="mb-3 mt-2 text-[13px] font-semibold uppercase tracking-wide text-slate-900">Trends</h2>
         <div class="mb-8 grid gap-4 lg:grid-cols-2">
             @isset($data['sales'])
                 <section class="{{ $tile }}"><h3 class="mb-3 text-sm font-semibold">Sales, last 6 months</h3><div class="h-64" wire:ignore><canvas data-chart='@json($charts['sales'])' role="img" aria-label="Bar chart of monthly sales for the last six months"></canvas></div></section>
@@ -51,7 +51,7 @@
         </div>
     @endif
 
-    <h2 class="mb-3 text-sm font-semibold text-slate-900">Operations</h2>
+    <h2 class="mb-3 mt-2 text-[13px] font-semibold uppercase tracking-wide text-slate-900">Operations</h2>
     <div class="grid gap-6 lg:grid-cols-3" >
         @isset($data['inventory'])
             <section><h3 class="mb-2 text-sm font-semibold text-slate-700">Inventory</h3>

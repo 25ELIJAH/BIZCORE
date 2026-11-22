@@ -12,19 +12,19 @@
         thead { display: table-header-group; }
         .items tr { page-break-inside: avoid; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; }
-        .brand { color: #0C4137; }
-        .rule { height: 0; border-top: 3px solid #0C4137; margin: 0 0 18px; }
-        .accent { display: inline-block; width: 46px; height: 3px; background: #06D6A0; }
-        h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 2px; color: #0C4137; }
+        .brand { color: #1F55B0; }
+        .rule { height: 0; border-top: 3px solid #1F55B0; margin: 0 0 18px; }
+        .accent { display: inline-block; width: 46px; height: 3px; background: #93B4F0; }
+        h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 2px; color: #1F55B0; }
         table { width: 100%; border-collapse: collapse; }
         .muted { color: #64748b; }
         .right { text-align: right; }
-        .items th { background: #0C4137; color: #ffffff; text-align: left; padding: 8px; font-size: 9px; text-transform: uppercase; letter-spacing: .6px; }
-        .items td { padding: 8px; border-bottom: 1px solid #dbe5e2; }
+        .items th { background: #1F55B0; color: #ffffff; text-align: left; padding: 8px; font-size: 9px; text-transform: uppercase; letter-spacing: .6px; }
+        .items td { padding: 8px; border-bottom: 1px solid #dde5f3; }
         .totals td { padding: 4px 8px; }
-        .grand td { background: #E6FBF6; color: #0C4137; border-top: 2px solid #0C4137; font-size: 13px; font-weight: bold; padding: 8px; }
+        .grand td { background: #EAF1FD; color: #1F55B0; border-top: 2px solid #1F55B0; font-size: 13px; font-weight: bold; padding: 8px; }
         .badge { display: inline-block; padding: 3px 9px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
-        .paid { background: #E6FBF6; color: #0C4137; border: 1px solid #06D6A0; } .due { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; } .cancelled { background: #e2e8f0; color: #475569; } .overdue { background: #fee2e2; color: #b91c1c; }
+        .paid { background: #EAF1FD; color: #1F55B0; border: 1px solid #93B4F0; } .due { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; } .cancelled { background: #e2e8f0; color: #475569; } .overdue { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -56,7 +56,7 @@
 </table>
 
 <div class="rule" style="margin-top: 16px;"></div>
-<p style="margin: 0 0 4px; font-size: 9px; letter-spacing: .8px; color: #0C4137;"><strong>BILL TO</strong></p>
+<p style="margin: 0 0 4px; font-size: 9px; letter-spacing: .8px; color: #1F55B0;"><strong>BILL TO</strong></p>
 <strong>{{ $sale->customer?->name ?? 'Walk-in customer' }}</strong><br>
 @if ($sale->customer)
     <span class="muted">{!! nl2br(e($sale->customer->address)) !!}@if ($sale->customer->email)<br>{{ $sale->customer->email }}@endif @if ($sale->customer->tax_number)<br>Tax no. {{ $sale->customer->tax_number }}@endif</span>
@@ -91,7 +91,7 @@
 </table>
 
 @if ($sale->payments->isNotEmpty())
-    <p style="margin: 18px 0 4px; font-size: 9px; letter-spacing: .8px; color: #0C4137;"><strong>PAYMENTS RECEIVED</strong></p>
+    <p style="margin: 18px 0 4px; font-size: 9px; letter-spacing: .8px; color: #1F55B0;"><strong>PAYMENTS RECEIVED</strong></p>
     @foreach ($sale->payments as $payment)
         {{ $payment->paid_at->format('d M Y') }} · {{ $methods[$payment->method] ?? $payment->method }} · {{ $money($payment->amount) }}@if ($payment->reference) · Ref {{ $payment->reference }}@endif<br>
     @endforeach

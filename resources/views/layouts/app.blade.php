@@ -50,99 +50,116 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0C4137">
+    <meta name="theme-color" content="#2563c9">
     <title>@yield('title', $title ?? '') · {{ $currentCompany->name }} · {{ config('app.name') }}</title>
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen text-slate-800 antialiased">
+<body class="has-shell min-h-screen text-slate-800 antialiased">
 <div id="busy-bar" class="busy-bar" aria-hidden="true"></div>
-<div class="flex min-h-screen" id="shell">
-    <input type="checkbox" id="nav-toggle" class="peer hidden">
-    <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/40 peer-checked:block md:peer-checked:hidden" aria-hidden="true"></label>
-    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-brunswick text-slate-200 transition-transform duration-200 peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0">
-        <div class="flex h-16 shrink-0 items-center gap-3 px-5">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-brand text-sm font-bold text-brunswick">B</div>
-            <div class="leading-tight">
-                <span class="block text-[15px] font-semibold text-white">{{ config('app.name') }}</span>
-                <span class="block max-w-[10rem] truncate text-[11px] text-slate-400">{{ $currentCompany->name }}</span>
+<div class="min-h-screen lg:p-6">
+<div class="mx-auto flex min-h-screen max-w-[1500px] flex-col overflow-hidden bg-white lg:min-h-[calc(100vh-3rem)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]" id="shell">
+
+    {{-- Top bar: logo, company switcher, user --}}
+    <header class="flex h-20 shrink-0 items-center gap-4 px-4 md:px-8">
+        <label for="nav-toggle" class="cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-brand-soft lg:hidden" aria-label="Toggle navigation">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </label>
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3 lg:w-[212px]">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
+            <span class="hidden text-xl font-bold text-indigo-600 sm:block">{{ config('app.name') }}</span>
+        </a>
+
+        <form method="POST" action="{{ route('company.switch') }}" class="ml-2 flex min-w-0 flex-1 items-center">
+            @csrf
+            <label for="company_id" class="sr-only">Company</label>
+            <div class="relative w-full max-w-md">
+                <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>
+                <select id="company_id" name="company_id" onchange="this.form.submit()"
+                        class="w-full appearance-none rounded-full border-0 bg-brand-soft py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 hover:bg-brand-tint focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/25">
+                    @foreach ($companies as $company)
+                        <option value="{{ $company->id }}" @selected($company->id === $currentCompany->id)>{{ $company->name }}</option>
+                    @endforeach
+                </select>
+                <svg class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
             </div>
+            <noscript><button class="rounded border px-2 py-1 text-sm">Switch</button></noscript>
+        </form>
+
+        <div class="flex shrink-0 items-center gap-3 text-sm">
+            <span class="hidden font-medium text-slate-700 sm:block">{{ auth()->user()->name }}</span>
+            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="rounded-full p-2 text-slate-500 transition-colors hover:bg-brand-soft hover:text-indigo-600" title="Sign out" aria-label="Sign out">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                </button>
+            </form>
         </div>
-        <nav class="mt-2 flex-1 space-y-5 overflow-y-auto px-3 pb-6" aria-label="Main">
-            @foreach ($groups as $group => $items)
-                @php $visible = collect($items)->filter(fn ($i) => auth()->user()->can($i['can'])); @endphp
-                @if ($visible->isNotEmpty())
-                    <div>
-                        <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400/80">{{ $group }}</p>
-                        <div class="space-y-0.5">
-                            @foreach ($visible as $item)
-                                <a href="{{ route($item['route']) }}" class="nav-link group" @if (request()->routeIs($item['active'])) aria-current="page" @endif>
-                                    <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons[$item['icon']] }}"/></svg>
-                                    {{ $item['label'] }}
-                                </a>
-                            @endforeach
+    </header>
+
+    <div class="relative flex min-h-0 flex-1">
+        <input type="checkbox" id="nav-toggle" class="peer hidden">
+        <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/40 peer-checked:block lg:peer-checked:hidden" aria-hidden="true"></label>
+
+        {{-- Curved blue sidebar --}}
+        <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-indigo-600 px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-auto lg:w-[252px] lg:shrink-0 lg:translate-x-0 lg:rounded-tr-[56px] lg:pt-8">
+            @can('sales.create')
+                <a href="{{ route('sales.create') }}" class="mb-7 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    New sale
+                </a>
+            @endcan
+            <nav class="flex-1 space-y-5" aria-label="Main">
+                @foreach ($groups as $group => $items)
+                    @php $visible = collect($items)->filter(fn ($i) => auth()->user()->can($i['can'])); @endphp
+                    @if ($visible->isNotEmpty())
+                        <div>
+                            <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50">{{ $group }}</p>
+                            <div class="space-y-0.5">
+                                @foreach ($visible as $item)
+                                    <a href="{{ route($item['route']) }}" class="nav-link group" @if (request()->routeIs($item['active'])) aria-current="page" @endif>
+                                        <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons[$item['icon']] }}"/></svg>
+                                        {{ $item['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
+                    @endif
+                @endforeach
+                @if (auth()->user()->is_super_admin)
+                    <div>
+                        <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50">System</p>
+                        <a href="/admin" class="nav-link group">
+                            <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons['admin'] }}"/></svg>
+                            Administration
+                        </a>
                     </div>
                 @endif
-            @endforeach
-            @if (auth()->user()->is_super_admin)
-                <div>
-                    <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400/80">System</p>
-                    <a href="/admin" class="nav-link group">
-                        <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons['admin'] }}"/></svg>
-                        Administration
-                    </a>
-                </div>
-            @endif
-        </nav>
-    </aside>
+            </nav>
 
-    <div class="flex min-w-0 flex-1 flex-col">
-        <header class="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
-            <div class="flex items-center gap-3">
-                <label for="nav-toggle" class="cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 md:hidden" aria-label="Toggle navigation">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </label>
-                <form method="POST" action="{{ route('company.switch') }}" class="flex items-center gap-2">
-                    @csrf
-                    <label for="company_id" class="hidden text-xs font-medium text-slate-500 sm:block">Company</label>
-                    <select id="company_id" name="company_id" onchange="this.form.submit()"
-                            class="rounded-md border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm font-medium text-slate-800 hover:border-slate-400 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15">
-                        @foreach ($companies as $company)
-                            <option value="{{ $company->id }}" @selected($company->id === $currentCompany->id)>{{ $company->name }}</option>
-                        @endforeach
-                    </select>
-                    <noscript><button class="rounded border px-2 py-1 text-sm">Switch</button></noscript>
-                </form>
+            <div class="mt-6 border-t border-white/20 pt-4 text-xs">
+                <p class="font-semibold uppercase tracking-wider text-white/60">Company</p>
+                <p class="mt-1.5 truncate text-sm font-medium text-white">{{ $currentCompany->name }}</p>
+                <p class="text-white/70">Currency {{ $currentCompany->currency }}</p>
             </div>
-            <div class="flex items-center gap-3 text-sm">
-                <div class="hidden items-center gap-2.5 sm:flex">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brunswick text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
-                    <span class="font-medium text-slate-700">{{ auth()->user()->name }}</span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn-secondary !px-3 !py-1.5">Sign out</button>
-                </form>
-            </div>
-        </header>
+        </aside>
 
-        <main class="flex-1 p-4 md:p-8">
+        <main class="min-w-0 flex-1 overflow-x-hidden px-4 pb-10 pt-4 md:px-10 md:pt-6">
             @if (session('status'))
-                <p class="toast mb-4 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800" role="status" data-autohide>
+                <p class="toast mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800" role="status" data-autohide>
                     <svg class="h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                     {{ session('status') }}
                 </p>
             @endif
-            <div>
-                @isset($slot)
-                    {{ $slot }}
-                @else
-                    @yield('content')
-                @endisset
-            </div>
+            @isset($slot)
+                {{ $slot }}
+            @else
+                @yield('content')
+            @endisset
         </main>
     </div>
+</div>
 </div>
 </body>
 </html>

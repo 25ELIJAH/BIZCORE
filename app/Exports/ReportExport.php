@@ -101,8 +101,8 @@ class ReportExport implements FromArray, WithColumnFormatting, WithColumnWidths,
             // Header
             $ws->getStyle("A1:{$lastCol}1")->applyFromArray([
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0C4137']],
-                'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '06D6A0']]],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1F55B0']],
+                'borders' => ['bottom' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '93B4F0']]],
                 'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
             ]);
             $ws->freezePane('A2');
@@ -126,8 +126,8 @@ class ReportExport implements FromArray, WithColumnFormatting, WithColumnWidths,
             if ($rowCount > 0) {
                 $ws->getStyle('A2:'.$lastCol.($rowCount + 1))->applyFromArray([
                     'borders' => [
-                        'horizontal' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'DBE5E2']],
-                        'bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'DBE5E2']],
+                        'horizontal' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'DDE5F3']],
+                        'bottom' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'DDE5F3']],
                     ],
                 ]);
             }
@@ -135,9 +135,9 @@ class ReportExport implements FromArray, WithColumnFormatting, WithColumnWidths,
             // Totals row
             if ($this->report['totals']) {
                 $ws->getStyle("A{$lastRow}:{$lastCol}{$lastRow}")->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => '0C4137']],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E6FBF6']],
-                    'borders' => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '0C4137']]],
+                    'font' => ['bold' => true, 'color' => ['rgb' => '1F55B0']],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EAF1FD']],
+                    'borders' => ['top' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1F55B0']]],
                 ]);
             }
 

@@ -9,26 +9,26 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand accent. Every view uses the "indigo" utilities for its accent, so re-pointing the scale re-themes the app.
-       Deep Brunswick green for actions and links; emerald is kept for small highlights only. */
-    --color-indigo-50: #f1f7f5;
-    --color-indigo-100: #dcebe7;
-    --color-indigo-200: #b7d6ce;
-    --color-indigo-300: #88bbae;
-    --color-indigo-400: #4f9a88;
-    --color-indigo-500: #1d7a64;
-    --color-indigo-600: #0f5e4d;
-    --color-indigo-700: #0C4137;
-    --color-indigo-800: #0a342c;
-    --color-indigo-900: #072620;
+    /* ONE place to change the brand colour. Every view uses the "indigo" utilities for its accent. */
+    --color-indigo-50: #eef3fd;
+    --color-indigo-100: #dbe6fb;
+    --color-indigo-200: #b9cef7;
+    --color-indigo-300: #8fb0f0;
+    --color-indigo-400: #5f8be6;
+    --color-indigo-500: #3a71da;
+    --color-indigo-600: #2563c9;
+    --color-indigo-700: #1f55b0;
+    --color-indigo-800: #19438d;
+    --color-indigo-900: #12326b;
 
-    --color-brunswick: #0C4137;
-    --color-emerald-brand: #06D6A0;
-    --color-polar: #E6FBF6;
-    --color-ink: #0a1f1b;
+    --color-brand: #2563c9;       /* sidebar, page backdrop, primary actions */
+    --color-brand-deep: #1f55b0;
+    --color-brand-soft: #eef2fa;  /* quiet card surface */
+    --color-brand-tint: #e3ecfc;  /* selected / hovered row */
+    --color-backdrop: #2b68cf;
 
-    --shadow-card: 0 1px 2px rgb(15 23 42 / 0.05);
-    --shadow-lift: 0 4px 14px -4px rgb(15 23 42 / 0.12);
+    --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04);
+    --shadow-shell: 0 30px 70px -20px rgb(10 30 80 / 0.55);
 
     --animate-fade-in: fade-in 0.2s ease-out both;
     --animate-pop: pop 0.18s ease-out both;
@@ -40,7 +40,7 @@
 @layer base {
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
-        background-color: #f5f7f6;
+        background-color: #ffffff;
         font-size: 14px;
         line-height: 1.5;
         color: #1e293b;
@@ -48,57 +48,75 @@
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
     }
-    h1, h2, h3 { letter-spacing: -0.011em; }
-    ::selection { background: #b7d6ce; color: #072620; }
-    :focus-visible { outline: 2px solid #1d7a64; outline-offset: 2px; }
-    /* Figures line up in columns */
-    table, .kpi, [data-count] { font-variant-numeric: tabular-nums; }
-    @media (prefers-reduced-motion: reduce) {
-        html { scroll-behavior: auto; }
+    @media (min-width: 1024px) {
+        body.has-shell { background-color: var(--color-backdrop); }
     }
+    h1, h2, h3 { letter-spacing: -0.011em; }
+    ::selection { background: #b9cef7; color: #12326b; }
+    :focus-visible { outline: 2px solid #3a71da; outline-offset: 2px; }
+    table, .kpi, [data-count] { font-variant-numeric: tabular-nums; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 }
 
-/* Shared form-control and button styles used by every module. */
 @layer components {
+    /* Form controls: soft grey-blue fields */
     .input {
-        @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15 disabled:bg-slate-100;
+        @apply w-full rounded-xl border border-slate-200 bg-brand-soft px-3.5 py-2 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 disabled:bg-slate-100;
     }
-    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50; }
-    .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+    /* Buttons: pills */
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50; }
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
-    /* Cards: every white bordered block in the page shares one flat surface. */
+    /* Page titles: large, bold, brand colour; section labels: small caps */
+    main h1 { @apply text-[1.75rem] font-bold leading-tight text-indigo-600; }
+
+    /* Surfaces: quiet grey-blue panels, no borders or shadows */
     .card, main .rounded-xl.border.border-slate-200.bg-white {
-        @apply rounded-lg border border-slate-200 bg-white shadow-card;
+        @apply rounded-2xl border border-transparent bg-brand-soft;
     }
-
-    /* Tables */
-    main table thead { @apply bg-slate-50; }
-    main table thead th { @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500; }
+    /* Tables sit directly on the page like a file list */
+    main .overflow-x-auto.rounded-xl.border.border-slate-200.bg-white { @apply rounded-none border-0 bg-transparent; }
+    main table thead { @apply bg-transparent; }
+    main table thead th { @apply border-b border-slate-300 text-[11px] font-medium uppercase tracking-wider text-slate-500; }
     main table tbody tr { @apply transition-colors duration-100; }
-    main table tbody tr:hover { @apply bg-slate-50; }
+    main table tbody tr:hover { @apply bg-brand-tint; }
+    main table tbody td { @apply border-slate-200; }
+    main .divide-y > :not(:last-child) { @apply border-slate-200; }
+    main table tbody tr td:first-child, main table thead th:first-child { @apply pl-3; }
+    main table tbody tr:hover td:first-child { @apply rounded-l-lg; }
+    main table tbody tr:hover td:last-child { @apply rounded-r-lg; }
 
-    /* KPI tiles */
-    .kpi { @apply rounded-lg border border-slate-200 bg-white p-4 shadow-card; }
+    /* Summary cards: folder-shaped tiles; the first one is the highlighted "open" folder */
+    .kpi { @apply relative mt-3 rounded-2xl bg-brand-soft p-5 transition-colors; }
+    .kpi::before { content: ''; @apply absolute -top-3 left-0 h-4 w-2/5 rounded-t-xl bg-brand-soft transition-colors; }
+    .kpi:hover { @apply bg-brand-tint; }
+    .kpi:hover::before { @apply bg-brand-tint; }
+    .kpi.is-primary { @apply bg-indigo-600 text-white; }
+    .kpi.is-primary::before { @apply bg-indigo-600; }
+    .kpi.is-primary p { @apply text-white; }
+    .kpi.is-primary p:first-child { @apply text-white/80; }
 
-    /* Loading placeholders */
     .skeleton { @apply rounded-md bg-slate-200/70; }
 
-    /* Livewire request in flight: slim progress bar at the top of the page */
     .busy-bar { @apply pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden opacity-0 transition-opacity; }
-    .busy-bar::after { content: ''; @apply absolute inset-y-0 w-1/3 bg-indigo-600; animation: busy 1s ease-in-out infinite; }
+    .busy-bar::after { content: ''; @apply absolute inset-y-0 w-1/3 bg-white; animation: busy 1s ease-in-out infinite; }
     @keyframes busy { 0% { left: -35%; } 100% { left: 100%; } }
     .busy-bar.is-busy { @apply opacity-100; }
 
-    /* Sidebar links */
-    .nav-link { @apply relative flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white; }
-    .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-slate-400 transition-colors group-hover:text-slate-200; }
-    .nav-link[aria-current='page'] { @apply bg-white/10 text-white; }
-    .nav-link[aria-current='page'] svg { @apply text-emerald-brand; }
-    .nav-link[aria-current='page']::before { content: ''; @apply absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-emerald-brand; }
+    /* Sidebar links on the blue panel */
+    .nav-link { @apply relative flex items-center gap-3 rounded-full px-4 py-2 text-[13px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white; }
+    .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-white/70 transition-colors group-hover:text-white; }
+    .nav-link[aria-current='page'] { @apply bg-white text-indigo-700; }
+    .nav-link[aria-current='page'] svg { @apply text-indigo-600; }
 
-    /* Toast (flash messages) */
     .toast { animation: var(--animate-pop); }
     .toast.is-leaving { @apply opacity-0 transition duration-300; }
 }
+
+/* Unlayered so they beat the text-colour utilities used inside the cards */
+.kpi.is-primary, .kpi.is-primary p, .kpi.is-primary span { color: #ffffff; }
+.kpi.is-primary p:first-child { color: rgba(255, 255, 255, 0.8); }
+.kpi.is-primary { background-color: #2563c9; }
+.kpi.is-primary::before { background-color: #2563c9; }
