@@ -50,7 +50,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0C4137">
     <title>@yield('title', $title ?? '') · {{ $currentCompany->name }} · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -59,9 +59,9 @@
 <div class="flex min-h-screen" id="shell">
     <input type="checkbox" id="nav-toggle" class="peer hidden">
     <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/50 backdrop-blur-sm peer-checked:block md:peer-checked:hidden" aria-hidden="true"></label>
-    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-200 shadow-xl transition-transform duration-300 ease-out peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0 md:shadow-none">
+    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-brunswick via-[#082e27] to-ink text-slate-200 shadow-xl transition-transform duration-300 ease-out peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0 md:shadow-none">
         <div class="flex h-16 shrink-0 items-center gap-3 px-5">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 font-bold text-white shadow-lg shadow-indigo-500/30">B</div>
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-brand to-indigo-600 font-bold text-ink shadow-lg shadow-emerald-brand/30">B</div>
             <div class="leading-tight">
                 <span class="block text-base font-semibold tracking-tight text-white">{{ config('app.name') }}</span>
                 <span class="block max-w-[10rem] truncate text-[11px] text-slate-400">{{ $currentCompany->name }}</span>
@@ -106,7 +106,7 @@
                     @csrf
                     <label for="company_id" class="hidden text-xs font-medium uppercase tracking-wide text-slate-500 sm:block">Company</label>
                     <select id="company_id" name="company_id" onchange="this.form.submit()"
-                            class="rounded-lg border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm font-medium shadow-xs transition hover:border-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
+                            class="rounded-lg border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm font-medium shadow-xs transition hover:border-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-emerald-brand/20">
                         @foreach ($companies as $company)
                             <option value="{{ $company->id }}" @selected($company->id === $currentCompany->id)>{{ $company->name }}</option>
                         @endforeach
@@ -116,7 +116,7 @@
             </div>
             <div class="flex items-center gap-3 text-sm">
                 <div class="hidden items-center gap-2.5 sm:flex">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 text-xs font-semibold text-white shadow-sm" aria-hidden="true">{{ $initials }}</span>
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-brand to-indigo-600 text-xs font-semibold text-ink shadow-sm" aria-hidden="true">{{ $initials }}</span>
                     <span class="font-medium text-slate-700">{{ auth()->user()->name }}</span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">

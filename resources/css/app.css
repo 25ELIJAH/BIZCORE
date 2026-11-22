@@ -10,16 +10,22 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* Brand: the whole app uses the "indigo" utilities for its accent, so re-pointing the scale re-themes every page. */
-    --color-indigo-50: #f0fdfa;
-    --color-indigo-100: #ccfbf1;
-    --color-indigo-200: #99f6e4;
-    --color-indigo-300: #5eead4;
-    --color-indigo-400: #2dd4bf;
-    --color-indigo-500: #14b8a6;
-    --color-indigo-600: #0d9488;
-    --color-indigo-700: #0f766e;
-    --color-indigo-800: #115e59;
-    --color-indigo-900: #134e4a;
+    --color-indigo-50: #E6FBF6;
+    --color-indigo-100: #c9f6ea;
+    --color-indigo-200: #96ecd5;
+    --color-indigo-300: #5be2bd;
+    --color-indigo-400: #2cdcab;
+    --color-indigo-500: #06D6A0;
+    --color-indigo-600: #0a8a6d;
+    --color-indigo-700: #0b6552;
+    --color-indigo-800: #0C4137;
+    --color-indigo-900: #082e27;
+
+    /* Named brand colours */
+    --color-brunswick: #0C4137;
+    --color-emerald-brand: #06D6A0;
+    --color-polar: #E6FBF6;
+    --color-ink: #04100F;
 
     --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px -6px rgb(15 23 42 / 0.08);
     --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 28px -10px rgb(15 23 42 / 0.18);
@@ -42,14 +48,14 @@
 @layer base {
     html { scroll-behavior: smooth; }
     body {
-        background-color: #f4f7fa;
+        background-color: #f1faf7;
         background-image:
-            radial-gradient(900px 420px at 100% -10%, rgb(20 184 166 / 0.08), transparent 60%),
-            radial-gradient(700px 380px at -10% 110%, rgb(56 189 248 / 0.07), transparent 60%);
+            radial-gradient(900px 420px at 100% -10%, rgb(6 214 160 / 0.10), transparent 60%),
+            radial-gradient(700px 380px at -10% 110%, rgb(12 65 55 / 0.06), transparent 60%);
         background-attachment: fixed;
     }
-    ::selection { background: #99f6e4; color: #134e4a; }
-    :focus-visible { outline: 2px solid #14b8a6; outline-offset: 2px; }
+    ::selection { background: #96ecd5; color: #082e27; }
+    :focus-visible { outline: 2px solid #06D6A0; outline-offset: 2px; }
     /* Reduce-motion users keep hover feedback and short fades; only decorative looping motion is switched off. */
     @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
@@ -61,9 +67,9 @@
 /* Shared form-control and button styles used by every module. */
 @layer components {
     .input {
-        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-xs transition focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-100;
+        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-xs transition focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-emerald-brand/20 disabled:bg-slate-100;
     }
-    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-indigo-700/30 transition duration-200 hover:-translate-y-px hover:from-indigo-600 hover:to-indigo-700 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0; }
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-indigo-700 to-indigo-800 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-black/10 transition duration-200 hover:-translate-y-px hover:from-indigo-600 hover:to-indigo-700 hover:shadow-lg hover:shadow-emerald-brand/25 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0; }
     .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition duration-200 hover:-translate-y-px hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50; }
     .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-red-500 to-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-red-700/30 transition duration-200 hover:-translate-y-px hover:from-red-600 hover:to-red-700 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50; }
     .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ring-black/5; }
@@ -79,7 +85,7 @@
     /* Tables */
     main table thead { @apply bg-slate-50/80; }
     main table tbody tr { @apply transition-colors duration-150; }
-    main table tbody tr:hover { @apply bg-indigo-50; box-shadow: inset 3px 0 0 #14b8a6; }
+    main table tbody tr:hover { @apply bg-indigo-50; box-shadow: inset 3px 0 0 #06D6A0; }
     main table tbody tr { animation: var(--animate-fade-in); }
     main table tbody tr:nth-child(-n+12) { animation: var(--animate-fade-up); }
     main table tbody tr:nth-child(2) { animation-delay: 40ms; }

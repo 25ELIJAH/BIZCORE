@@ -5,9 +5,9 @@
     $label = 'text-xs uppercase tracking-wide text-slate-500';
 @endphp
 <div>
-    <div class="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 p-6 text-white shadow-lift animate-fade-up">
-        <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-indigo-400/20 blur-3xl"></div>
-        <p class="relative text-xs font-medium uppercase tracking-[0.14em] text-indigo-200">Currently managing</p>
+    <div class="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-ink via-brunswick to-indigo-600 p-6 text-white shadow-lift animate-fade-up">
+        <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-brand/25 blur-3xl"></div>
+        <p class="relative text-xs font-medium uppercase tracking-[0.14em] text-emerald-brand">Currently managing</p>
         <h1 class="relative mt-1 text-xl font-semibold xl:text-2xl tracking-tight md:text-3xl">{{ $company->name }}</h1>
         <p class="relative mt-1 text-sm text-slate-300">Currency {{ $currency }} · figures update each time you open this page.</p>
     </div>
