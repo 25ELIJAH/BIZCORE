@@ -52,6 +52,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#261a66">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <title>@yield('title', $title ?? '') · {{ $currentCompany->name }} · {{ config('app.name') }}</title>
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
