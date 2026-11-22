@@ -90,20 +90,19 @@ document.addEventListener('pointerdown', (e) => {
 
 // Desktop icon rail: the dark pill is drawn as one smooth SVG path with a round notch cut around the active item.
 // The notch (and its bubble) glides from the previous page's item to the current one.
-const RAIL = { w: 80, r: 35, f: 12, cx: 58 }; // pill width, notch radius, fillet radius, notch centre x
+const RAIL = { w: 208, r: 35, f: 12, cx: 22, corner: 40 }; // pill width, notch radius, fillet radius, notch centre x (from the left edge), corner radius
 
 function railPath(h, cy) {
-    const { w, r, f, cx } = RAIL;
-    const R = w / 2;
-    const top = `M0 ${R}A${R} ${R} 0 0 1 ${w} ${R}`;
-    const bottom = `L${w} ${h - R}A${R} ${R} 0 0 1 0 ${h - R}Z`;
-    if (cy < R + 60 || cy > h - R - 60) return `${top}${bottom}`;
-    const dx = w - f - cx;
+    const { w, r, f, cx, corner: k0 } = RAIL;
+    const top = `M${k0} 0H${w - k0}A${k0} ${k0} 0 0 1 ${w} ${k0}V${h - k0}A${k0} ${k0} 0 0 1 ${w - k0} ${h}H${k0}A${k0} ${k0} 0 0 1 0 ${h - k0}`;
+    const close = `L0 ${k0}A${k0} ${k0} 0 0 1 ${k0} 0Z`;
+    if (cy < k0 + 60 || cy > h - k0 - 60) return `${top}${close}`;
+    const dx = cx - f;
     const d = Math.sqrt((r + f) ** 2 - dx ** 2);
     const k = r / (r + f);
-    const tx = cx + k * dx;
+    const tx = cx - k * dx;
     const ty = k * d;
-    return `${top}L${w} ${cy - d}A${f} ${f} 0 0 1 ${tx} ${cy - ty}A${r} ${r} 0 1 0 ${tx} ${cy + ty}A${f} ${f} 0 0 1 ${w} ${cy + d}${bottom}`;
+    return `${top}L0 ${cy + d}A${f} ${f} 0 0 1 ${tx} ${cy + ty}A${r} ${r} 0 1 0 ${tx} ${cy - ty}A${f} ${f} 0 0 1 0 ${cy - d}${close}`;
 }
 
 function railNotch() {
