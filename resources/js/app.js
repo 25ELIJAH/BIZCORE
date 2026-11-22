@@ -3,10 +3,10 @@ import Chart from 'chart.js/auto';
 // Motion is kept on even when the OS asks for reduced motion: it is short and purely cosmetic, and the OS flag is often off by accident on Windows.
 
 // Shared chart look: quiet grid, rounded tooltips, a short eased entrance.
-Chart.defaults.font.family = "'Instrument Sans', ui-sans-serif, system-ui, sans-serif";
+Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, sans-serif";
 Chart.defaults.color = '#64748b';
 Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.18)';
-Chart.defaults.animation = { duration: 900, easing: 'easeOutQuart' };
+Chart.defaults.animation = { duration: 500, easing: 'easeOutQuart' };
 Chart.defaults.plugins.legend.labels.usePointStyle = true;
 Chart.defaults.plugins.legend.labels.boxWidth = 8;
 Chart.defaults.plugins.tooltip.backgroundColor = '#0f172a';

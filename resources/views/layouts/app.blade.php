@@ -52,18 +52,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0C4137">
     <title>@yield('title', $title ?? '') · {{ $currentCompany->name }} · {{ config('app.name') }}</title>
+    {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen text-slate-800 antialiased">
 <div id="busy-bar" class="busy-bar" aria-hidden="true"></div>
 <div class="flex min-h-screen" id="shell">
     <input type="checkbox" id="nav-toggle" class="peer hidden">
-    <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/50 backdrop-blur-sm peer-checked:block md:peer-checked:hidden" aria-hidden="true"></label>
-    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-brunswick/95 via-[#082e27]/95 to-ink/95 backdrop-blur-xl text-slate-200 shadow-xl transition-transform duration-300 ease-out peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0 md:shadow-none">
+    <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/40 peer-checked:block md:peer-checked:hidden" aria-hidden="true"></label>
+    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-brunswick text-slate-200 transition-transform duration-200 peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0">
         <div class="flex h-16 shrink-0 items-center gap-3 px-5">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-brand to-indigo-600 font-bold text-ink shadow-lg shadow-emerald-brand/30">B</div>
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-brand text-sm font-bold text-brunswick">B</div>
             <div class="leading-tight">
-                <span class="block text-base font-semibold tracking-tight text-white">{{ config('app.name') }}</span>
+                <span class="block text-[15px] font-semibold text-white">{{ config('app.name') }}</span>
                 <span class="block max-w-[10rem] truncate text-[11px] text-slate-400">{{ $currentCompany->name }}</span>
             </div>
         </div>
@@ -72,7 +73,7 @@
                 @php $visible = collect($items)->filter(fn ($i) => auth()->user()->can($i['can'])); @endphp
                 @if ($visible->isNotEmpty())
                     <div>
-                        <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{{ $group }}</p>
+                        <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400/80">{{ $group }}</p>
                         <div class="space-y-0.5">
                             @foreach ($visible as $item)
                                 <a href="{{ route($item['route']) }}" class="nav-link group" @if (request()->routeIs($item['active'])) aria-current="page" @endif>
@@ -86,7 +87,7 @@
             @endforeach
             @if (auth()->user()->is_super_admin)
                 <div>
-                    <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">System</p>
+                    <p class="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400/80">System</p>
                     <a href="/admin" class="nav-link group">
                         <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons['admin'] }}"/></svg>
                         Administration
@@ -97,16 +98,16 @@
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-        <header class="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200/70 bg-white/80 px-4 backdrop-blur-md md:px-8">
+        <header class="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
             <div class="flex items-center gap-3">
                 <label for="nav-toggle" class="cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 md:hidden" aria-label="Toggle navigation">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </label>
                 <form method="POST" action="{{ route('company.switch') }}" class="flex items-center gap-2">
                     @csrf
-                    <label for="company_id" class="hidden text-xs font-medium uppercase tracking-wide text-slate-500 sm:block">Company</label>
+                    <label for="company_id" class="hidden text-xs font-medium text-slate-500 sm:block">Company</label>
                     <select id="company_id" name="company_id" onchange="this.form.submit()"
-                            class="rounded-lg border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm font-medium shadow-xs transition hover:border-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-emerald-brand/20">
+                            class="rounded-md border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-sm font-medium text-slate-800 hover:border-slate-400 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15">
                         @foreach ($companies as $company)
                             <option value="{{ $company->id }}" @selected($company->id === $currentCompany->id)>{{ $company->name }}</option>
                         @endforeach
@@ -116,7 +117,7 @@
             </div>
             <div class="flex items-center gap-3 text-sm">
                 <div class="hidden items-center gap-2.5 sm:flex">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-brand to-indigo-600 text-xs font-semibold text-ink shadow-sm" aria-hidden="true">{{ $initials }}</span>
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brunswick text-xs font-semibold text-white" aria-hidden="true">{{ $initials }}</span>
                     <span class="font-medium text-slate-700">{{ auth()->user()->name }}</span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
@@ -128,12 +129,12 @@
 
         <main class="flex-1 p-4 md:p-8">
             @if (session('status'))
-                <p class="toast mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800 shadow-card" role="status" data-autohide>
+                <p class="toast mb-4 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800" role="status" data-autohide>
                     <svg class="h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                     {{ session('status') }}
                 </p>
             @endif
-            <div class="animate-fade-in">
+            <div>
                 @isset($slot)
                     {{ $slot }}
                 @else
