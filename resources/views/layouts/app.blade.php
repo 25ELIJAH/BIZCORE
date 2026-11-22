@@ -59,7 +59,7 @@
 <div class="flex min-h-screen" id="shell">
     <input type="checkbox" id="nav-toggle" class="peer hidden">
     <label for="nav-toggle" class="fixed inset-0 z-20 hidden bg-slate-900/50 backdrop-blur-sm peer-checked:block md:peer-checked:hidden" aria-hidden="true"></label>
-    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-brunswick via-[#082e27] to-ink text-slate-200 shadow-xl transition-transform duration-300 ease-out peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0 md:shadow-none">
+    <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-brunswick/95 via-[#082e27]/95 to-ink/95 backdrop-blur-xl text-slate-200 shadow-xl transition-transform duration-300 ease-out peer-checked:translate-x-0 md:sticky md:top-0 md:h-screen md:translate-x-0 md:shadow-none">
         <div class="flex h-16 shrink-0 items-center gap-3 px-5">
             <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-brand to-indigo-600 font-bold text-ink shadow-lg shadow-emerald-brand/30">B</div>
             <div class="leading-tight">
