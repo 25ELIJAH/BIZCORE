@@ -57,7 +57,6 @@
 </head>
 <body class="has-shell min-h-screen text-slate-800 antialiased">
 <div id="busy-bar" class="busy-bar" aria-hidden="true"></div>
-<svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false"><filter id="rail-goo" x="-60%" y="-8%" width="220%" height="116%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDeviation="7"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"/></filter></svg>
 <div class="min-h-screen lg:p-6">
 <div class="mx-auto flex min-h-screen max-w-[1500px] flex-col overflow-hidden bg-white lg:min-h-[calc(100vh-3rem)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]" id="shell">
 
@@ -106,7 +105,7 @@
         {{-- Curved blue sidebar --}}
         <aside class="fixed inset-y-0 left-0 z-30 flex w-64 -translate-x-full flex-col overflow-y-auto bg-indigo-600 px-5 pb-5 pt-6 text-white transition-transform duration-200 peer-checked:translate-x-0 lg:static lg:z-20 lg:w-[112px] lg:shrink-0 lg:translate-x-0 lg:overflow-visible lg:bg-transparent lg:px-4 lg:pb-8 lg:pt-2">
             <div class="rail">
-                <div class="rail-goo" aria-hidden="true"><div class="rail-shape"></div></div>
+                <svg class="rail-svg" aria-hidden="true" focusable="false"><path d=""/></svg>
                 <span class="rail-bubble" aria-hidden="true"></span>
             @can('sales.create')
                 <a href="{{ route('sales.create') }}" data-label="New sale" class="rail-add mb-7 inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-50">

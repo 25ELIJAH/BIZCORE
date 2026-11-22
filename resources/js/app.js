@@ -88,35 +88,54 @@ document.addEventListener('pointerdown', (e) => {
     setTimeout(() => dot.remove(), 650);
 });
 
-// Desktop icon rail: the curved notch and its bubble glide from the previous page's item to the current one.
+// Desktop icon rail: the dark pill is drawn as one smooth SVG path with a round notch cut around the active item.
+// The notch (and its bubble) glides from the previous page's item to the current one.
+const RAIL = { w: 80, r: 35, f: 12, cx: 58 }; // pill width, notch radius, fillet radius, notch centre x
+
+function railPath(h, cy) {
+    const { w, r, f, cx } = RAIL;
+    const R = w / 2;
+    const top = `M0 ${R}A${R} ${R} 0 0 1 ${w} ${R}`;
+    const bottom = `L${w} ${h - R}A${R} ${R} 0 0 1 0 ${h - R}Z`;
+    if (cy < R + 60 || cy > h - R - 60) return `${top}${bottom}`;
+    const dx = w - f - cx;
+    const d = Math.sqrt((r + f) ** 2 - dx ** 2);
+    const k = r / (r + f);
+    const tx = cx + k * dx;
+    const ty = k * d;
+    return `${top}L${w} ${cy - d}A${f} ${f} 0 0 1 ${tx} ${cy - ty}A${r} ${r} 0 1 0 ${tx} ${cy + ty}A${f} ${f} 0 0 1 ${w} ${cy + d}${bottom}`;
+}
+
 function railNotch() {
     const rail = document.querySelector('.rail');
     if (!rail) return;
+    const path = rail.querySelector('.rail-svg path');
     const active = rail.querySelector('.nav-link[aria-current="page"]');
+    const draw = (cy) => {
+        path.setAttribute('d', railPath(rail.offsetHeight, cy));
+        rail.style.setProperty('--notch-y', `${cy}px`);
+    };
+    if (rail._anim) cancelAnimationFrame(rail._anim);
     if (!active || !window.matchMedia('(min-width: 1024px)').matches) {
-        rail.style.setProperty('--notch-y', '-200px');
+        draw(-200);
         return;
     }
-    const place = () => active.getBoundingClientRect().top - rail.getBoundingClientRect().top + active.offsetHeight / 2;
+    const to = active.getBoundingClientRect().top - rail.getBoundingClientRect().top + active.offsetHeight / 2;
     let from = null;
-    try { from = sessionStorage.getItem('railY'); } catch (e) { /* storage unavailable */ }
-    rail.classList.add('no-anim');
-    rail.style.setProperty('--notch-y', `${from ?? 24}px`);
-    void rail.offsetWidth;
-    rail.classList.remove('no-anim');
-    requestAnimationFrame(() => {
-        const y = place();
-        rail.style.setProperty('--notch-y', `${y}px`);
-        try { sessionStorage.setItem('railY', String(y)); } catch (e) { /* storage unavailable */ }
-    });
+    try { from = parseFloat(sessionStorage.getItem('railY')); } catch (e) { /* storage unavailable */ }
+    if (!Number.isFinite(from)) from = to;
+    try { sessionStorage.setItem('railY', String(to)); } catch (e) { /* storage unavailable */ }
+    const start = performance.now();
+    const duration = 550;
+    const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 4);
+        draw(from + (to - from) * eased);
+        if (t < 1) rail._anim = requestAnimationFrame(step);
+    };
+    rail._anim = requestAnimationFrame(step);
 }
-window.addEventListener('resize', () => {
-    const rail = document.querySelector('.rail');
-    if (!rail) return;
-    rail.classList.add('no-anim');
-    railNotch();
-    setTimeout(() => rail.classList.remove('no-anim'), 50);
-});
+window.addEventListener('resize', () => railNotch());
 
 function boot() {
     railNotch();
