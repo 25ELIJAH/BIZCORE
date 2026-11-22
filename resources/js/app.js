@@ -1,12 +1,12 @@
 import Chart from 'chart.js/auto';
 
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Motion is kept on even when the OS asks for reduced motion: it is short and purely cosmetic, and the OS flag is often off by accident on Windows.
 
 // Shared chart look: quiet grid, rounded tooltips, a short eased entrance.
 Chart.defaults.font.family = "'Instrument Sans', ui-sans-serif, system-ui, sans-serif";
 Chart.defaults.color = '#64748b';
 Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.18)';
-Chart.defaults.animation = reduceMotion ? false : { duration: 900, easing: 'easeOutQuart' };
+Chart.defaults.animation = { duration: 900, easing: 'easeOutQuart' };
 Chart.defaults.plugins.legend.labels.usePointStyle = true;
 Chart.defaults.plugins.legend.labels.boxWidth = 8;
 Chart.defaults.plugins.tooltip.backgroundColor = '#0f172a';
@@ -28,7 +28,6 @@ function mountCharts() {
 
 // <span data-count="1234.5" data-decimals="2"> counts up to its value (the markup already holds the final text).
 function countUp() {
-    if (reduceMotion) return;
     document.querySelectorAll('[data-count]:not([data-counted])').forEach((el) => {
         el.dataset.counted = '1';
         const target = parseFloat(el.dataset.count);

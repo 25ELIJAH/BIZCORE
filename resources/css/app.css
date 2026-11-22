@@ -50,9 +50,11 @@
     }
     ::selection { background: #99f6e4; color: #134e4a; }
     :focus-visible { outline: 2px solid #14b8a6; outline-offset: 2px; }
+    /* Reduce-motion users keep hover feedback and short fades; only decorative looping motion is switched off. */
     @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
-        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        .animate-float, [style*='float-slow'] { animation: none !important; }
+        .skeleton::after, .busy-bar::after { animation-duration: 2.4s !important; }
     }
 }
 
@@ -72,10 +74,20 @@
     }
     main .rounded-xl.border.border-slate-200.bg-white { animation: var(--animate-fade-up); }
 
+    main section.rounded-xl, main .grid > .rounded-xl { @apply transition duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lift; }
+
     /* Tables */
     main table thead { @apply bg-slate-50/80; }
     main table tbody tr { @apply transition-colors duration-150; }
-    main table tbody tr:hover { @apply bg-indigo-50/50; }
+    main table tbody tr:hover { @apply bg-indigo-50; box-shadow: inset 3px 0 0 #14b8a6; }
+    main table tbody tr { animation: var(--animate-fade-in); }
+    main table tbody tr:nth-child(-n+12) { animation: var(--animate-fade-up); }
+    main table tbody tr:nth-child(2) { animation-delay: 40ms; }
+    main table tbody tr:nth-child(3) { animation-delay: 80ms; }
+    main table tbody tr:nth-child(4) { animation-delay: 120ms; }
+    main table tbody tr:nth-child(5) { animation-delay: 160ms; }
+    main table tbody tr:nth-child(6) { animation-delay: 200ms; }
+    main table tbody tr:nth-child(n+7):nth-child(-n+12) { animation-delay: 240ms; }
     main .overflow-x-auto { scrollbar-width: thin; }
 
     /* Staggered entrance: children of [data-stagger] rise in one after another. */
@@ -88,7 +100,7 @@
     [data-stagger] > *:nth-child(6) { animation-delay: 300ms; }
 
     /* KPI tiles */
-    .kpi { @apply relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-lift; }
+    .kpi { @apply relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 shadow-card transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300 hover:shadow-lift; }
     .kpi::after { content: ''; @apply pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/10 transition duration-500; }
     .kpi:hover::after { @apply scale-150; }
 
@@ -103,8 +115,8 @@
     .busy-bar.is-busy { @apply opacity-100; }
 
     /* Sidebar links */
-    .nav-link { @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:bg-white/5 hover:text-white; }
-    .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-slate-500 transition duration-200 group-hover:text-indigo-300; }
+    .nav-link { @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:translate-x-1 hover:bg-white/10 hover:text-white; }
+    .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-slate-500 transition duration-200 group-hover:scale-125 group-hover:text-indigo-300; }
     .nav-link[aria-current='page'] { @apply bg-white/10 text-white; }
     .nav-link[aria-current='page'] svg { @apply text-indigo-300; }
     .nav-link[aria-current='page']::before { content: ''; @apply absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-indigo-400; }
