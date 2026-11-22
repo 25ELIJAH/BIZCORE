@@ -73,6 +73,21 @@ function busyBar() {
     });
 }
 
+// Click ripple: a soft circle grows from the pointer on buttons and the sidebar pills (delegated, so it also covers Livewire content).
+document.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest?.('.btn-primary, .btn-secondary, .btn-danger, .nav-link, .ripple');
+    if (!el || el.disabled) return;
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2;
+    const dot = document.createElement('span');
+    dot.className = 'ripple-dot';
+    dot.style.width = dot.style.height = `${size}px`;
+    dot.style.left = `${e.clientX - rect.left - size / 2}px`;
+    dot.style.top = `${e.clientY - rect.top - size / 2}px`;
+    el.appendChild(dot);
+    setTimeout(() => dot.remove(), 650);
+});
+
 function boot() {
     mountCharts();
     countUp();

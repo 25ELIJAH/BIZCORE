@@ -120,3 +120,74 @@
 .kpi.is-primary p:first-child { color: rgba(255, 255, 255, 0.8); }
 .kpi.is-primary { background-color: #2563c9; }
 .kpi.is-primary::before { background-color: #2563c9; }
+
+/* ------------------------------------------------------------------
+   Motion layer (colours, layout and fonts above are untouched).
+   Unlayered so it wins over the utility classes used in the views.
+------------------------------------------------------------------- */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@keyframes ripple { from { opacity: 0.45; transform: scale(0); } to { opacity: 0; transform: scale(1); } }
+
+/* Page load: content rises in one block after another */
+main > *, main > div > * { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+main > :nth-child(2), main > div > :nth-child(2) { animation-delay: 0.06s; }
+main > :nth-child(3), main > div > :nth-child(3) { animation-delay: 0.12s; }
+main > :nth-child(4), main > div > :nth-child(4) { animation-delay: 0.18s; }
+main > :nth-child(5), main > div > :nth-child(5) { animation-delay: 0.24s; }
+main > :nth-child(n+6), main > div > :nth-child(n+6) { animation-delay: 0.3s; }
+
+/* Summary folders: staggered entrance, lift and soft shadow on hover */
+.kpi { animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background-color 0.2s ease; }
+.kpi:nth-child(2) { animation-delay: 0.07s; } .kpi:nth-child(3) { animation-delay: 0.14s; }
+.kpi:nth-child(4) { animation-delay: 0.21s; } .kpi:nth-child(5) { animation-delay: 0.28s; } .kpi:nth-child(6) { animation-delay: 0.35s; }
+.kpi:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -12px rgb(31 85 176 / 0.35); }
+.kpi:active { transform: translateY(-1px) scale(0.99); }
+
+/* Table rows: gentle entrance, nudge on hover */
+main table tbody tr { animation: slide-in 0.4s ease backwards; transition: background-color 0.15s ease, transform 0.15s ease; }
+main table tbody tr:nth-child(2) { animation-delay: 0.03s; } main table tbody tr:nth-child(3) { animation-delay: 0.06s; }
+main table tbody tr:nth-child(4) { animation-delay: 0.09s; } main table tbody tr:nth-child(5) { animation-delay: 0.12s; }
+main table tbody tr:nth-child(n+6) { animation-delay: 0.15s; }
+main table tbody tr:hover { transform: translateX(3px); }
+
+/* Buttons: lift on hover, press on click, ripple */
+.btn-primary, .btn-secondary, .btn-danger, .nav-link, .ripple { position: relative; overflow: hidden; }
+.btn-primary, .btn-secondary, .btn-danger { transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease; }
+.btn-primary:hover:not(:disabled), .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 16px -6px rgb(31 85 176 / 0.5); }
+.btn-secondary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 16px -8px rgb(15 23 42 / 0.25); }
+.btn-primary:active:not(:disabled), .btn-secondary:active:not(:disabled), .btn-danger:active:not(:disabled) { transform: scale(0.95); box-shadow: none; }
+.ripple-dot { position: absolute; border-radius: 9999px; background: currentColor; pointer-events: none; animation: ripple 0.65s ease-out forwards; }
+.btn-secondary .ripple-dot { background: #2563c9; }
+
+/* Sidebar: links slide and their icons pop; pills press */
+.nav-link { transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.nav-link:hover { transform: translateX(4px); }
+.nav-link:active { transform: translateX(4px) scale(0.97); }
+.nav-link svg { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease; }
+.nav-link:hover svg { transform: scale(1.2) rotate(-6deg); }
+.nav-link[aria-current='page'] .ripple-dot { background: #2563c9; }
+aside nav > div { animation: slide-in 0.45s ease backwards; }
+aside nav > div:nth-child(2) { animation-delay: 0.07s; } aside nav > div:nth-child(3) { animation-delay: 0.14s; }
+aside nav > div:nth-child(4) { animation-delay: 0.21s; } aside nav > div:nth-child(n+5) { animation-delay: 0.28s; }
+aside > a.rounded-full { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+aside > a.rounded-full:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.35); }
+aside > a.rounded-full:active { transform: scale(0.96); }
+
+/* Header: logo, company pill, avatar and icon buttons respond to the pointer */
+header a[href] > span:first-child { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+header a[href]:hover > span:first-child { transform: rotate(-8deg) scale(1.1); }
+header select { transition: background-color 0.2s ease, box-shadow 0.2s ease; }
+header [aria-hidden='true'].rounded-full { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+header [aria-hidden='true'].rounded-full:hover { transform: scale(1.12); }
+header button, header label[for='nav-toggle'] { transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+header button:hover, header label[for='nav-toggle']:hover { transform: scale(1.1); }
+header button:active, header label[for='nav-toggle']:active { transform: scale(0.88); }
+
+/* Fields: a small lift when focused */
+.input { transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+.input:focus { transform: translateY(-1px); }
+
+/* Panels (cards, charts) lift slightly on hover */
+main .rounded-2xl.bg-brand-soft:not(.kpi) { transition: box-shadow 0.25s ease, transform 0.25s ease; }
+main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px rgb(31 85 176 / 0.3); transform: translateY(-2px); }
