@@ -110,30 +110,49 @@ function railNotch() {
     const rail = document.querySelector('.rail');
     if (!rail) return;
     const path = rail.querySelector('.rail-svg path');
+    const links = [...rail.querySelectorAll('.nav-link')];
     const active = rail.querySelector('.nav-link[aria-current="page"]');
+    const wide = window.matchMedia('(min-width: 1024px)').matches;
     const draw = (cy) => {
+        rail._cy = cy;
         path.setAttribute('d', railPath(rail.offsetHeight, cy));
         rail.style.setProperty('--notch-y', `${cy}px`);
     };
-    if (rail._anim) cancelAnimationFrame(rail._anim);
-    if (!active || !window.matchMedia('(min-width: 1024px)').matches) {
-        draw(-200);
-        return;
-    }
-    const to = active.getBoundingClientRect().top - rail.getBoundingClientRect().top + active.offsetHeight / 2;
-    let from = null;
-    try { from = parseFloat(sessionStorage.getItem('railY')); } catch (e) { /* storage unavailable */ }
-    if (!Number.isFinite(from)) from = to;
-    try { sessionStorage.setItem('railY', String(to)); } catch (e) { /* storage unavailable */ }
-    const start = performance.now();
-    const duration = 550;
-    const step = (now) => {
-        const t = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - t, 4);
-        draw(from + (to - from) * eased);
-        if (t < 1) rail._anim = requestAnimationFrame(step);
+    const centre = (el) => el.getBoundingClientRect().top - rail.getBoundingClientRect().top + el.offsetHeight / 2;
+    // Glide the notch to an item's centre; the item whose icon sits on the bubble gets .is-hot.
+    const glide = (target, duration = 450) => {
+        if (rail._anim) cancelAnimationFrame(rail._anim);
+        links.forEach((l) => l.classList.toggle('is-hot', l === target));
+        if (!target) { draw(-200); return; }
+        const to = centre(target);
+        const from = Number.isFinite(rail._cy) && rail._cy > 0 ? rail._cy : to;
+        try { sessionStorage.setItem('railY', String(to)); } catch (e) { /* storage unavailable */ }
+        const start = performance.now();
+        const step = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            draw(from + (to - from) * (1 - Math.pow(1 - t, 4)));
+            if (t < 1) rail._anim = requestAnimationFrame(step);
+        };
+        rail._anim = requestAnimationFrame(step);
     };
-    rail._anim = requestAnimationFrame(step);
+    rail._glide = glide;
+    rail._active = active;
+    if (!wide) { glide(null); return; }
+    let from = NaN;
+    try { from = parseFloat(sessionStorage.getItem('railY')); } catch (e) { /* storage unavailable */ }
+    rail._cy = Number.isFinite(from) ? from : undefined;
+    glide(active);
+    if (!rail._bound) {
+        rail._bound = true;
+        // Hover moves the notch to the hovered item; leaving returns it to the current page. Clicking keeps it there.
+        rail.addEventListener('mouseover', (e) => {
+            const link = e.target.closest('.nav-link');
+            if (link && window.matchMedia('(min-width: 1024px)').matches) rail._glide(link, 320);
+        });
+        rail.addEventListener('mouseleave', () => {
+            if (window.matchMedia('(min-width: 1024px)').matches) rail._glide(rail._active, 380);
+        });
+    }
 }
 window.addEventListener('resize', () => railNotch());
 

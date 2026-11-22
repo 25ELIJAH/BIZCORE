@@ -217,8 +217,10 @@ main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px 
     .nav-link svg { width: 22px; height: 22px; color: rgb(255 255 255 / 0.78); }
     .nav-link:hover { background: transparent; }
     .nav-link:hover svg { color: #ffffff; }
-    .nav-link[aria-current='page'] { background: transparent; color: #12326b; }
-    .nav-link[aria-current='page'] svg, .nav-link[aria-current='page']:hover svg { color: #12326b; }
+    .nav-link[aria-current='page'] { background: transparent; color: #ffffff; }
+    .nav-link[aria-current='page'] svg { color: rgb(255 255 255 / 0.78); }
+    .nav-link.is-hot .ripple-dot { background: #2563c9; }
+    .nav-link.is-hot svg, .nav-link.is-hot:hover svg { color: #12326b; transform: scale(1.12); }
     .nav-link .ripple-dot, .rail-add .ripple-dot { width: 48px !important; height: 48px !important; left: 16px !important; top: 0 !important; }
     .rail-add .ripple-dot { left: 0 !important; background: #2563c9; }
     .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -230,5 +232,5 @@ main .rounded-2xl.bg-brand-soft:not(.kpi):hover { box-shadow: 0 12px 24px -14px 
         opacity: 0; transform: translate(-6px, -50%); transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
     a.rail-add::after { left: calc(100% + 14px); }
-    .nav-link:hover::after, a.rail-add:hover::after, .nav-link:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+    .nav-link:hover::after, a.rail-add:hover::after, .nav-link:focus-visible::after, .nav-link.is-hot:hover::after { opacity: 1; transform: translate(0, -50%); }
 }
