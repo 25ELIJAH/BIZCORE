@@ -8,15 +8,108 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand: the whole app uses the "indigo" utilities for its accent, so re-pointing the scale re-themes every page. */
+    --color-indigo-50: #f0fdfa;
+    --color-indigo-100: #ccfbf1;
+    --color-indigo-200: #99f6e4;
+    --color-indigo-300: #5eead4;
+    --color-indigo-400: #2dd4bf;
+    --color-indigo-500: #14b8a6;
+    --color-indigo-600: #0d9488;
+    --color-indigo-700: #0f766e;
+    --color-indigo-800: #115e59;
+    --color-indigo-900: #134e4a;
+
+    --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px -6px rgb(15 23 42 / 0.08);
+    --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 28px -10px rgb(15 23 42 / 0.18);
+
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --animate-fade-up: fade-up 0.5s var(--ease-out-soft) both;
+    --animate-fade-in: fade-in 0.3s ease-out both;
+    --animate-pop: pop 0.28s var(--ease-out-soft) both;
+    --animate-slide-in: slide-in 0.35s var(--ease-out-soft) both;
+
+    @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+    @keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+    @keyframes float-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+}
+
+@layer base {
+    html { scroll-behavior: smooth; }
+    body {
+        background-color: #f4f7fa;
+        background-image:
+            radial-gradient(900px 420px at 100% -10%, rgb(20 184 166 / 0.08), transparent 60%),
+            radial-gradient(700px 380px at -10% 110%, rgb(56 189 248 / 0.07), transparent 60%);
+        background-attachment: fixed;
+    }
+    ::selection { background: #99f6e4; color: #134e4a; }
+    :focus-visible { outline: 2px solid #14b8a6; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
 }
 
 /* Shared form-control and button styles used by every module. */
 @layer components {
     .input {
-        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100;
+        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-xs transition focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-100;
     }
-    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50; }
-    .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-indigo-700/30 transition duration-200 hover:-translate-y-px hover:from-indigo-600 hover:to-indigo-700 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0; }
+    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition duration-200 hover:-translate-y-px hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-red-500 to-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm ring-1 ring-inset ring-red-700/30 transition duration-200 hover:-translate-y-px hover:from-red-600 hover:to-red-700 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50; }
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ring-black/5; }
+
+    /* Cards: any white bordered block inside the page gets the same surface, shadow and entrance. */
+    .card, main .rounded-xl.border.border-slate-200.bg-white {
+        @apply rounded-xl border border-slate-200/80 bg-white shadow-card;
+    }
+    main .rounded-xl.border.border-slate-200.bg-white { animation: var(--animate-fade-up); }
+
+    /* Tables */
+    main table thead { @apply bg-slate-50/80; }
+    main table tbody tr { @apply transition-colors duration-150; }
+    main table tbody tr:hover { @apply bg-indigo-50/50; }
+    main .overflow-x-auto { scrollbar-width: thin; }
+
+    /* Staggered entrance: children of [data-stagger] rise in one after another. */
+    [data-stagger] > * { animation: var(--animate-fade-up); }
+    [data-stagger] > *:nth-child(1) { animation-delay: 0ms; }
+    [data-stagger] > *:nth-child(2) { animation-delay: 60ms; }
+    [data-stagger] > *:nth-child(3) { animation-delay: 120ms; }
+    [data-stagger] > *:nth-child(4) { animation-delay: 180ms; }
+    [data-stagger] > *:nth-child(5) { animation-delay: 240ms; }
+    [data-stagger] > *:nth-child(6) { animation-delay: 300ms; }
+
+    /* KPI tiles */
+    .kpi { @apply relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4 shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-lift; }
+    .kpi::after { content: ''; @apply pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/10 transition duration-500; }
+    .kpi:hover::after { @apply scale-150; }
+
+    /* Loading shimmer for placeholders */
+    .skeleton { @apply relative overflow-hidden rounded-md bg-slate-200/70; }
+    .skeleton::after { content: ''; @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent; animation: shimmer 1.4s infinite; }
+
+    /* Livewire request in flight: slim progress bar under the header */
+    .busy-bar { @apply pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden opacity-0 transition-opacity; }
+    .busy-bar::after { content: ''; @apply absolute inset-y-0 w-1/3 rounded-full bg-indigo-500; animation: busy 1s ease-in-out infinite; }
+    @keyframes busy { 0% { left: -35%; } 100% { left: 100%; } }
+    .busy-bar.is-busy { @apply opacity-100; }
+
+    /* Sidebar links */
+    .nav-link { @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:bg-white/5 hover:text-white; }
+    .nav-link svg { @apply h-[18px] w-[18px] shrink-0 text-slate-500 transition duration-200 group-hover:text-indigo-300; }
+    .nav-link[aria-current='page'] { @apply bg-white/10 text-white; }
+    .nav-link[aria-current='page'] svg { @apply text-indigo-300; }
+    .nav-link[aria-current='page']::before { content: ''; @apply absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-indigo-400; }
+
+    /* Toast (flash messages) */
+    .toast { animation: var(--animate-pop); }
+    .toast.is-leaving { @apply opacity-0 transition duration-300; transform: translateY(-6px); }
 }

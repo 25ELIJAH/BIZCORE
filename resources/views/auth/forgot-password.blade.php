@@ -7,10 +7,10 @@
     <div>
         <label for="email" class="mb-1 block text-sm font-medium">Email</label>
         <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus
-               class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+               class="input">
         @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
-    <button type="submit" class="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700">Send reset link</button>
+    <button type="submit" class="btn-primary w-full !py-2.5">Send reset link</button>
     <a href="{{ route('login') }}" class="block text-center text-sm text-indigo-600 hover:underline">Back to sign in</a>
 </form>
 @endsection

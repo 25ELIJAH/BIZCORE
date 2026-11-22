@@ -45,10 +45,10 @@ class Dashboard extends Component
 
         if (isset($d['sales'])) {
             $charts['sales'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['trend']['labels'], 'datasets' => [[
-                'label' => 'Sales', 'data' => $num($d['sales']['trend']['values']), 'backgroundColor' => '#6366f1', 'borderRadius' => 4,
+                'label' => 'Sales', 'data' => $num($d['sales']['trend']['values']), 'backgroundColor' => '#0d9488', 'borderRadius' => 4,
             ]]], 'options' => $this->options()];
             $charts['top'] = ['type' => 'bar', 'data' => ['labels' => $d['sales']['top_products']['labels'], 'datasets' => [[
-                'label' => 'Revenue this month', 'data' => $num($d['sales']['top_products']['values']), 'backgroundColor' => '#0ea5e9', 'borderRadius' => 4,
+                'label' => 'Revenue this month', 'data' => $num($d['sales']['top_products']['values']), 'backgroundColor' => '#38bdf8', 'borderRadius' => 4,
             ]]], 'options' => $this->options(['indexAxis' => 'y', 'scales' => ['x' => ['beginAtZero' => true]]])];
         }
         if (isset($d['finance'])) {
