@@ -23,9 +23,7 @@
             ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'home', 'can' => 'dashboard.view', 'active' => 'home'],
             ['label' => 'Activity', 'icon' => 'attendance', 'route' => 'activity', 'can' => 'activity_logs.view', 'active' => 'activity'],
             ['label' => 'Company', 'icon' => 'categories', 'route' => 'company.settings', 'can' => 'manage-company', 'active' => 'company.settings'],
-            ['label' => 'Team', 'icon' => 'employees', 'route' => 'company.team', 'can' => 'manage-company', 'active' => 'company.team'],
-            ['label' => 'Settings', 'icon' => 'admin', 'route' => 'company.appearance', 'can' => 'manage-company', 'active' => 'company.appearance'],
-        ],
+            ['label' => 'Team', 'icon' => 'employees', 'route' => 'company.team', 'can' => 'manage-company', 'active' => 'company.team'],        ],
         'Trade' => [
             ['label' => 'Sales', 'icon' => 'sales', 'route' => 'sales.index', 'can' => 'sales.view', 'active' => 'sales.*'],
             ['label' => 'Customers', 'icon' => 'customers', 'route' => 'customers.index', 'can' => 'customers.view', 'active' => 'customers.*'],
@@ -154,6 +152,16 @@
                         </a>
                     </div>
                 @endif
+                {{-- Settings is always the last item in the menu. --}}
+                @can('manage-company')
+                    <div>
+                        <p class="mb-1.5 px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50 lg:hidden">Preferences</p>
+                        <a href="{{ route('company.appearance') }}" class="nav-link group" data-label="Settings" @if (request()->routeIs('company.appearance')) aria-current="page" @endif>
+                            <svg fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $icons['admin'] }}"/></svg>
+                            <span class="nav-label">Settings</span>
+                        </a>
+                    </div>
+                @endcan
             </nav>
 
             <div class="mt-6 border-t border-white/20 pt-4 text-xs lg:hidden">

@@ -14,6 +14,12 @@ class Appearance
         'sunset' => ['Sunset', 'images/auth-bg.svg'],
         'aurora' => ['Aurora', 'images/bg-aurora.svg'],
         'ocean' => ['Ocean', 'images/bg-ocean.svg'],
+        'city-dusk' => ['City dusk', 'images/backgrounds/city-dusk.webp'],
+        'fuji-dusk' => ['Fuji dusk', 'images/backgrounds/fuji-dusk.webp'],
+        'highlands' => ['Highlands', 'images/backgrounds/highlands.webp'],
+        'sunset-peak' => ['Sunset peak', 'images/backgrounds/sunset-peak.webp'],
+        'forest-lake' => ['Forest lake', 'images/backgrounds/forest-lake.webp'],
+        'lake-cabin' => ['Lake cabin', 'images/backgrounds/lake-cabin.webp'],
     ];
 
     /**
