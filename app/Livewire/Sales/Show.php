@@ -4,12 +4,15 @@ namespace App\Livewire\Sales;
 
 use App\Exceptions\BusinessRuleException;
 use App\Mail\InvoiceMail;
+use App\Models\MpesaTransaction;
 use App\Models\Payment;
 use App\Models\Sale;
 use App\Services\ActivityLogger;
+use App\Services\MpesaService;
 use App\Services\PaymentService;
 use App\Services\SaleService;
 use App\Support\Tenancy\CurrentCompany;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -94,6 +97,68 @@ class Show extends Component
         $this->sale->refresh();
         $this->notice = 'Payment recorded.';
         $this->closeModals();
+    }
+
+    // ---- M-Pesa STK push ---------------------------------------------------------------------------
+
+    public bool $showMpesa = false;
+
+    public string $mpesaPhone = '';
+
+    public string $mpesaAmount = '';
+
+    public ?int $mpesaTxId = null;
+
+    public function openMpesa(MpesaService $mpesa): void
+    {
+        $this->authorize('payments.record');
+        abort_unless($mpesa->isConfigured(app(CurrentCompany::class)->get()), 404);
+        $this->resetValidation();
+        $this->mpesaPhone = (string) ($this->sale->customer?->phone ?? '');
+        $this->mpesaAmount = (string) floor((float) $this->sale->balance());
+        $this->mpesaTxId = null;
+        $this->showMpesa = true;
+    }
+
+    public function sendMpesa(MpesaService $mpesa): void
+    {
+        $this->authorize('payments.record');
+        $this->validate(['mpesaPhone' => ['required', 'string', 'max:20'], 'mpesaAmount' => ['required', 'numeric', 'min:1']], [], ['mpesaPhone' => 'phone number', 'mpesaAmount' => 'amount']);
+
+        try {
+            $tx = $mpesa->stkPush($this->sale, $this->mpesaPhone, $this->mpesaAmount, Auth::user());
+        } catch (BusinessRuleException $e) {
+            $this->addError('mpesaPhone', $e->getMessage());
+
+            return;
+        }
+
+        $this->mpesaTxId = $tx->id;
+    }
+
+    /** Polled while the customer is looking at their phone. */
+    public function checkMpesa(MpesaService $mpesa): void
+    {
+        $tx = $this->mpesaTransaction();
+        if ($tx && $tx->isPending()) {
+            $mpesa->checkStatus($tx);
+        }
+
+        if ($tx && $tx->fresh()->status === MpesaTransaction::SUCCESS) {
+            $this->sale->refresh();
+        }
+    }
+
+    public function retryMpesa(): void
+    {
+        $this->mpesaTxId = null;
+    }
+
+    private function mpesaTransaction(): ?MpesaTransaction
+    {
+        return $this->mpesaTxId
+            ? MpesaTransaction::where('company_id', app(CurrentCompany::class)->id())->where('sale_id', $this->sale->id)->find($this->mpesaTxId)
+            : null;
     }
 
     public function openVoid(int $paymentId): void
@@ -198,7 +263,7 @@ class Show extends Component
 
     public function closeModals(): void
     {
-        $this->showPayment = $this->showCancel = $this->showEdit = false;
+        $this->showPayment = $this->showCancel = $this->showEdit = $this->showMpesa = false;
         $this->voidPaymentId = null;
     }
 
@@ -209,6 +274,8 @@ class Show extends Component
         return view('livewire.sales.show', [
             'paymentMethods' => app(CurrentCompany::class)->get()->paymentMethods(),
             'currency' => app(CurrentCompany::class)->get()->currency,
+            'mpesaReady' => app(MpesaService::class)->isConfigured(app(CurrentCompany::class)->get()),
+            'mpesaTx' => $this->showMpesa ? $this->mpesaTransaction() : null,
             'voidPayment' => $this->voidPaymentId ? Payment::find($this->voidPaymentId) : null,
         ]);
     }

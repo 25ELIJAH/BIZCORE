@@ -28,6 +28,13 @@ use App\Livewire\Inventory\Products;
 use App\Livewire\Inventory\StockMovements;
 use Illuminate\Support\Facades\Route;
 
+// Safaricom calls this with no login and no CSRF token; the secret uuid in the URL is what identifies the payment.
+Route::post('mpesa/callback/{uuid}', \App\Http\Controllers\MpesaCallbackController::class)
+    ->name('mpesa.callback')
+    ->where('uuid', '[0-9a-fA-F-]{36}')
+    ->middleware('throttle:120,1')
+    ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
+
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);

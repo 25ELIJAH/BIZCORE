@@ -4,6 +4,7 @@ namespace App\Livewire\Company;
 
 use App\Models\Company;
 use App\Services\ActivityLogger;
+use App\Services\MpesaService;
 use App\Support\Notifier;
 use App\Support\Tenancy\CurrentCompany;
 use Livewire\Attributes\Layout;
@@ -42,6 +43,21 @@ class Settings extends Component
     /** @var array<string, bool> event key => send an email too (the bell always gets it) */
     public array $emails = [];
 
+    // M-Pesa (STK push). The three secrets are write-only: they are never sent back to the page, and a blank box keeps what is saved.
+    public string $mpesa_environment = 'sandbox';
+
+    public string $mpesa_type = 'paybill';
+
+    public string $mpesa_shortcode = '';
+
+    public string $mpesa_consumer_key = '';
+
+    public string $mpesa_consumer_secret = '';
+
+    public string $mpesa_passkey = '';
+
+    private const MPESA_SECRETS = ['consumer_key', 'consumer_secret', 'passkey'];
+
     private const SETTING_FIELDS = ['website', 'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch', 'invoice_note'];
 
     public function mount(): void
@@ -60,6 +76,10 @@ class Settings extends Component
         foreach (array_keys(Notifier::EVENTS) as $event) {
             $this->emails[Notifier::key($event)] = Notifier::emailEnabled($company, $event);
         }
+
+        $this->mpesa_environment = (string) $company->setting('mpesa.environment', 'sandbox');
+        $this->mpesa_type = (string) $company->setting('mpesa.type', 'paybill');
+        $this->mpesa_shortcode = (string) $company->setting('mpesa.shortcode', '');
     }
 
     public function save(ActivityLogger $log): void
@@ -79,6 +99,12 @@ class Settings extends Component
             'bank_account_number' => ['nullable', 'string', 'max:60'],
             'bank_branch' => ['nullable', 'string', 'max:120'],
             'invoice_note' => ['nullable', 'string', 'max:500'],
+            'mpesa_environment' => ['required', 'in:sandbox,production'],
+            'mpesa_type' => ['required', 'in:paybill,till'],
+            'mpesa_shortcode' => ['nullable', 'digits_between:4,10'],
+            'mpesa_consumer_key' => ['nullable', 'string', 'max:255'],
+            'mpesa_consumer_secret' => ['nullable', 'string', 'max:255'],
+            'mpesa_passkey' => ['nullable', 'string', 'max:255'],
         ]);
 
         $company = $this->company();
@@ -87,6 +113,19 @@ class Settings extends Component
         foreach (self::SETTING_FIELDS as $field) {
             $settings[$field] = $this->{$field} === '' ? null : $this->{$field};
         }
+
+        $mpesa = (array) ($settings['mpesa'] ?? []);
+        $mpesa['environment'] = $this->mpesa_environment;
+        $mpesa['type'] = $this->mpesa_type;
+        $mpesa['shortcode'] = $this->mpesa_shortcode === '' ? null : $this->mpesa_shortcode;
+        foreach (self::MPESA_SECRETS as $secret) {
+            $typed = trim($this->{'mpesa_'.$secret});
+            if ($typed !== '') {
+                $mpesa[$secret] = MpesaService::conceal($typed); // stored encrypted, never shown again
+            }
+        }
+        $settings['mpesa'] = $mpesa;
+        $this->mpesa_consumer_key = $this->mpesa_consumer_secret = $this->mpesa_passkey = '';
 
         foreach (array_keys(Notifier::EVENTS) as $event) {
             $settings['notifications_email'][Notifier::key($event)] = (bool) ($this->emails[Notifier::key($event)] ?? false);
@@ -115,6 +154,8 @@ class Settings extends Component
         return view('livewire.company.settings', [
             'welcome' => session('welcome', false),
             'hasTeam' => $this->company()->users()->count() > 1,
+            'mpesaSaved' => collect(self::MPESA_SECRETS)->mapWithKeys(fn ($k) => [$k => filled($this->company()->setting("mpesa.{$k}"))])->all(),
+            'mpesaReady' => app(MpesaService::class)->isConfigured($this->company()),
         ]);
     }
 }

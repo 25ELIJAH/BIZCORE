@@ -55,7 +55,12 @@
                 <div class="mb-3 flex items-center justify-between">
                     <h2 class="font-semibold">Payments</h2>
                     @if (! $sale->isCancelled() && bccomp($sale->balance(), '0', 2) > 0)
-                        @can('payments.record')<button type="button" wire:click="openPayment" class="btn-primary">Record payment</button>@endcan
+                        @can('payments.record')
+                            <div class="flex flex-wrap gap-2">
+                                @if ($mpesaReady)<button type="button" wire:click="openMpesa" class="btn-primary !bg-emerald-600 hover:!bg-emerald-700">Pay with M-Pesa</button>@endif
+                                <button type="button" wire:click="openPayment" class="btn-primary">Record payment</button>
+                            </div>
+                        @endcan
                     @endif
                 </div>
                 @forelse ($sale->payments as $payment)
@@ -88,6 +93,44 @@
             @if ($sale->notes)<p class="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">{{ $sale->notes }}</p>@endif
         </aside>
     </div>
+
+    @if ($showMpesa)
+        <x-ui.modal title="Pay with M-Pesa" close="closeModals">
+            @if (! $mpesaTx)
+                <form wire:submit="sendMpesa" class="space-y-4">
+                    <p class="text-sm text-slate-600">The customer gets a prompt on their phone and enters their M-Pesa PIN. The payment is recorded here automatically. Balance due: <strong>{{ $currency }} {{ number_format((float) $sale->balance(), 2) }}</strong></p>
+                    <x-ui.field label="Customer phone (Safaricom)" name="mpesaPhone"><input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input" placeholder="0712 345 678" autofocus></x-ui.field>
+                    <x-ui.field label="Amount ({{ $currency }}, whole shillings)" name="mpesaAmount"><input id="mpesaAmount" type="number" step="1" min="1" wire:model="mpesaAmount" class="input"></x-ui.field>
+                    <div class="flex justify-end gap-2"><button type="button" wire:click="closeModals" class="btn-secondary">Cancel</button><button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="sendMpesa">Send prompt</button></div>
+                </form>
+            @elseif ($mpesaTx->status === 'pending')
+                <div wire:poll.4s="checkMpesa" class="space-y-3 text-center">
+                    <p class="text-sm font-semibold text-slate-800">Prompt sent to {{ $mpesaTx->phone }}</p>
+                    <p class="text-sm text-slate-600">Ask the customer to check their phone and enter their M-Pesa PIN. This page updates by itself.</p>
+                    <p class="text-xs text-slate-400">Waiting for confirmation&hellip;</p>
+                    <div class="flex justify-center gap-2"><button type="button" wire:click="closeModals" class="btn-secondary">Close</button></div>
+                </div>
+            @elseif ($mpesaTx->status === 'success')
+                <div class="space-y-3 text-center">
+                    <p class="text-lg font-semibold text-emerald-700">Payment received</p>
+                    <p class="text-sm text-slate-600">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }} from {{ $mpesaTx->phone }}@if ($mpesaTx->mpesa_receipt) &middot; receipt {{ $mpesaTx->mpesa_receipt }}@endif. It has been added to the payments.</p>
+                    <button type="button" wire:click="closeModals" class="btn-primary">Done</button>
+                </div>
+            @elseif ($mpesaTx->status === 'needs_review')
+                <div class="space-y-3 text-center">
+                    <p class="text-lg font-semibold text-amber-700">Payment needs review</p>
+                    <p class="text-sm text-slate-600">The customer paid{{ $mpesaTx->mpesa_receipt ? ' (receipt '.$mpesaTx->mpesa_receipt.')' : '' }} but it could not be added to this sale: {{ $mpesaTx->result_desc }}. Please check with an administrator.</p>
+                    <button type="button" wire:click="closeModals" class="btn-secondary">Close</button>
+                </div>
+            @else
+                <div class="space-y-3 text-center">
+                    <p class="text-lg font-semibold text-red-700">Payment was not completed</p>
+                    <p class="text-sm text-slate-600">{{ $mpesaTx->result_desc ?: 'The customer cancelled or the prompt timed out.' }} Nothing was charged.</p>
+                    <div class="flex justify-center gap-2"><button type="button" wire:click="closeModals" class="btn-secondary">Close</button><button type="button" wire:click="retryMpesa" class="btn-primary">Try again</button></div>
+                </div>
+            @endif
+        </x-ui.modal>
+    @endif
 
     @if ($showPayment)
         <x-ui.modal title="Record payment" close="closeModals">

@@ -33,8 +33,10 @@ class Company extends Model
     public function paymentMethods(): array
     {
         $configured = $this->setting('payment_methods');
+        $methods = is_array($configured) && $configured !== [] ? $configured : config('bizcore.payment_methods');
 
-        return is_array($configured) && $configured !== [] ? $configured : config('bizcore.payment_methods');
+        // M-Pesa is always available: STK payments are recorded under it, and staff can also record one by hand.
+        return $methods + ['mpesa' => 'M-Pesa'];
     }
 
     public function paymentTermsDays(): int

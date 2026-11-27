@@ -40,6 +40,38 @@
             @endforeach
         </section>
 
+        <section class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm font-semibold">M-Pesa payments (STK push)</h2>
+                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $mpesaReady ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $mpesaReady ? 'Ready: Pay with M-Pesa is on' : 'Not set up' }}</span>
+            </div>
+            <p class="text-sm text-slate-500">Let customers pay an invoice from their phone. Get these from your Safaricom Daraja app (developer.safaricom.co.ke). Keep it on <strong>Sandbox</strong> while testing: no real money moves. The keys are stored encrypted and are never shown again; leave a box empty to keep what is saved.</p>
+            <div class="grid gap-4 sm:grid-cols-3">
+                <div>
+                    <label for="mpesa_environment" class="mb-1 block text-sm font-medium">Mode</label>
+                    <select id="mpesa_environment" wire:model="mpesa_environment" class="input"><option value="sandbox">Sandbox (testing)</option><option value="production">Production (real money)</option></select>
+                </div>
+                <div>
+                    <label for="mpesa_type" class="mb-1 block text-sm font-medium">Receive on</label>
+                    <select id="mpesa_type" wire:model="mpesa_type" class="input"><option value="paybill">Paybill</option><option value="till">Till number (Buy Goods)</option></select>
+                </div>
+                <div>
+                    <label for="mpesa_shortcode" class="mb-1 block text-sm font-medium">Paybill / till number</label>
+                    <input id="mpesa_shortcode" type="text" inputmode="numeric" wire:model="mpesa_shortcode" class="input" autocomplete="off">
+                    @error('mpesa_shortcode')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-3">
+                @foreach ([['mpesa_consumer_key', 'consumer_key', 'Consumer key'], ['mpesa_consumer_secret', 'consumer_secret', 'Consumer secret'], ['mpesa_passkey', 'passkey', 'Passkey']] as [$field, $saved, $label])
+                    <div>
+                        <label for="{{ $field }}" class="mb-1 block text-sm font-medium">{{ $label }} @if ($mpesaSaved[$saved])<span class="font-normal text-emerald-600">&middot; saved</span>@endif</label>
+                        <input id="{{ $field }}" type="password" wire:model="{{ $field }}" class="input" autocomplete="new-password" placeholder="{{ $mpesaSaved[$saved] ? 'Leave empty to keep' : '' }}">
+                        @error($field)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
+                @endforeach
+            </div>
+        </section>
+
         <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
             <h2 class="text-sm font-semibold">Email notifications</h2>
             <p class="mt-1 text-sm text-slate-500">The bell in the header always tells the right people. Tick the events that should also be emailed to them. Who is told follows each person's role: approvers hear about leave and purchase orders, managers about sales and stock.</p>
