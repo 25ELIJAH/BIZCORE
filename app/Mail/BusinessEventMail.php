@@ -11,12 +11,12 @@ use Illuminate\Mail\Mailables\Envelope;
 /** One "something happened in your business" email. See App\Support\Notifier. */
 class BusinessEventMail extends Mailable
 {
-    /** @param array{title: string, body: string, url: ?string} $message */
-    public function __construct(public Company $company, public User $user, public array $message) {}
+    /** @param array{title: string, body: string, url: ?string} $notice */
+    public function __construct(public Company $company, public User $user, public array $notice) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: '['.$this->company->name.'] '.$this->message['title']);
+        return new Envelope(subject: '['.$this->company->name.'] '.$this->notice['title']);
     }
 
     public function content(): Content

@@ -71,6 +71,18 @@ class NotificationsTest extends TestCase
         Mail::assertSent(BusinessEventMail::class, fn ($m) => $m->hasTo($this->admin->email));
     }
 
+    public function test_the_notice_email_really_renders_with_its_title_body_and_link(): void
+    {
+        $mail = new BusinessEventMail($this->company, $this->admin, ['title' => 'New sale INV-1', 'body' => 'KES 100.00 to Acme', 'url' => 'https://example.test/sales/1']);
+
+        $html = $mail->render();
+
+        $this->assertStringContainsString('New sale INV-1', $html);
+        $this->assertStringContainsString('KES 100.00 to Acme', $html);
+        $this->assertStringContainsString('https://example.test/sales/1', $html);
+        $this->assertStringContainsString('['.$this->company->name.'] New sale INV-1', $mail->envelope()->subject);
+    }
+
     public function test_an_email_can_be_switched_off_per_event_but_the_bell_still_rings(): void
     {
         $this->company->forceFill(['settings' => ['notifications_email' => ['sale_created' => false]]])->save();
