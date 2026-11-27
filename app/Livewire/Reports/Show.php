@@ -3,6 +3,7 @@
 namespace App\Livewire\Reports;
 
 use App\Services\ReportService;
+use App\Support\ReportCharts;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -34,9 +35,12 @@ class Show extends Component
     {
         $valid = strtotime($this->from) && strtotime($this->to) && $this->from <= $this->to;
 
+        $result = $valid ? $reports->build($this->report, $this->from, $this->to) : null;
+
         return view('livewire.reports.show', [
+            'charts' => $result ? ReportCharts::for($this->report, $result) : [],
             'definition' => ReportService::CATALOG[$this->report],
-            'result' => $valid ? $reports->build($this->report, $this->from, $this->to) : null,
+            'result' => $result,
             'currency' => app(CurrentCompany::class)->get()->currency,
             'canExport' => Gate::allows('reports.export'),
         ]);

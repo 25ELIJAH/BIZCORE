@@ -24,6 +24,17 @@
     @if (! $result)
         <p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">Choose a valid date range (the start must not be after the end).</p>
     @else
+        @if ($charts)
+            <div class="mb-4 grid gap-4 {{ count($charts) > 1 ? 'lg:grid-cols-2' : '' }}" wire:loading.class="opacity-60">
+                @foreach ($charts as $chart)
+                    <section class="rounded-xl border border-slate-200 bg-white p-4" wire:key="chart-{{ $loop->index }}-{{ md5(json_encode($chart)) }}">
+                        <h2 class="mb-3 text-sm font-semibold text-slate-700">{{ $chart['title'] }}</h2>
+                        <div class="relative h-64" x-data="reportChart" data-spec='@json($chart)'><canvas role="img" aria-label="{{ $chart['title'] }}"></canvas></div>
+                    </section>
+                @endforeach
+            </div>
+        @endif
+
         <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white" wire:loading.class="opacity-60">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">

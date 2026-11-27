@@ -69,6 +69,60 @@ document.addEventListener('submit', (e) => {
     if (button) button.classList.add('is-loading');
 });
 
+// Report charts (Chart.js is loaded on demand, only on pages that draw one). Each chart's data comes from the same rows as the table.
+const CHART_COLOURS = ['#261a66', '#ef5f18', '#ffb386', '#7a6fd0', '#c9c2ef', '#f6d3bd', '#94a3b8'];
+
+document.addEventListener('alpine:init', () => {
+    window.Alpine.data('reportChart', () => ({
+        chart: null,
+        async init() {
+            const spec = JSON.parse(this.$el.dataset.spec);
+            const { default: Chart } = await import('chart.js/auto');
+            if (!this.$el.isConnected) return;
+
+            const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+            const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
+            const doughnut = spec.type === 'doughnut';
+            const single = spec.datasets.length === 1;
+
+            Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, sans-serif';
+            Chart.defaults.color = '#475569';
+
+            const datasets = spec.datasets.map((d, i) => ({
+                ...d,
+                backgroundColor: doughnut ? CHART_COLOURS : (single && !spec.stacked ? '#ef5f18' : CHART_COLOURS[i % CHART_COLOURS.length]),
+                borderWidth: doughnut ? 2 : 0,
+                borderColor: '#ffffff',
+                borderRadius: doughnut ? 0 : 6,
+                maxBarThickness: 38,
+            }));
+
+            this.chart = new Chart(this.$el.querySelector('canvas'), {
+                type: spec.type,
+                data: { labels: spec.labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: spec.horizontal ? 'y' : 'x',
+                    cutout: doughnut ? '62%' : undefined,
+                    animation: { duration: 900, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: doughnut || spec.datasets.length > 1, position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { callbacks: { label: (c) => ` ${c.dataset.label ?? c.label}: ${nf.format(doughnut ? c.parsed : (spec.horizontal ? c.parsed.x : c.parsed.y))}` } },
+                    },
+                    scales: doughnut ? {} : {
+                        x: { stacked: spec.stacked, grid: { display: spec.horizontal, color: '#e2e8f0' }, ticks: spec.horizontal ? { callback: (v) => compact.format(v) } : { maxRotation: 0, autoSkip: true } },
+                        y: { stacked: spec.stacked, grid: { display: !spec.horizontal, color: '#e2e8f0' }, beginAtZero: true, ticks: spec.horizontal ? {} : { callback: (v) => compact.format(v) } },
+                    },
+                },
+            });
+        },
+        destroy() {
+            this.chart?.destroy();
+        },
+    }));
+});
+
 // Desktop icon rail: the dark pill is drawn as one smooth SVG path with a round notch cut around the active item.
 // The notch (and its bubble) glides from the previous page's item to the current one.
 const RAIL = { w: 208, r: 35, f: 12, cx: 22, corner: 40 }; // pill width, notch radius, fillet radius, notch centre x (from the edge the notch is on), corner radius; the SVG is mirrored in CSS so the notch sits on the right
