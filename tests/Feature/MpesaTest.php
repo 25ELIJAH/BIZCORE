@@ -311,7 +311,7 @@ class MpesaTest extends TestCase
             ->assertSee('Send payment prompt');
         $this->assertSame(0, MpesaTransaction::count()); // nothing is sent until the button is pressed
 
-        $form->call('sendMpesa')->assertHasNoErrors()->assertSee('Processing');
+        $form->call('sendMpesa')->assertHasNoErrors()->assertSee('Waiting for PIN');
 
         $sale = Sale::latest('id')->first();
         $tx = MpesaTransaction::where('sale_id', $sale->id)->first();
@@ -319,7 +319,7 @@ class MpesaTest extends TestCase
         $this->assertCount(0, $sale->payments()->get(), 'nothing is recorded until the customer pays');
 
         $this->hitCallback($tx)->assertOk();
-        $form->call('checkMpesa')->assertSee('Success!')->assertSee($sale->customer->name)->assertSee('QWE123XYZ');
+        $form->call('checkMpesa')->assertSee('Payment successful')->assertSee($sale->customer->name)->assertSee('QWE123XYZ');
 
         $payment = $sale->fresh()->payments()->first();
         $this->assertSame('mpesa', $payment->method);
