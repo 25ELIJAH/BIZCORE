@@ -76,4 +76,15 @@ class AccountPasswordTest extends TestCase
 
         Notification::assertSentTo($this->user, ResetPassword::class);
     }
+
+    public function test_a_mail_failure_does_not_crash_forgot_password_and_is_logged(): void
+    {
+        \Illuminate\Support\Facades\Log::spy();
+        \Illuminate\Support\Facades\Password::shouldReceive('sendResetLink')->andThrow(new \RuntimeException('smtp refused'));
+        auth()->logout();
+
+        $this->post(route('password.email'), ['email' => $this->user->email])->assertSessionHas('status');
+
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('error')->withArgs(fn ($m) => str_contains($m, 'smtp refused'))->once();
+    }
 }

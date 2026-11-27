@@ -8,6 +8,7 @@ use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -25,7 +26,13 @@ class PasswordResetController extends Controller
         $request->validate(['email' => ['required', 'email']]);
 
         // Same response whether or not the address exists, to avoid account enumeration.
-        Password::sendResetLink($request->only('email'));
+        // A mail failure (wrong credentials, blocked IP) must not crash the page, and must not reveal that the account
+        // exists. It is written to the log with the real reason instead.
+        try {
+            Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            Log::error('Password reset email could not be sent: '.$e->getMessage());
+        }
 
         return back()->with('status', 'If that email is registered, a reset link has been sent.');
     }

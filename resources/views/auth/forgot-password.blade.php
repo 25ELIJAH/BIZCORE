@@ -1,5 +1,7 @@
 @extends('layouts.guest')
 @section('title', 'Forgot password')
+@section('heading', 'Forgot password')
+@section('subheading', 'We will email you a link to choose a new one.')
 @section('content')
 <p class="mb-4 text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
 <form method="POST" action="{{ route('password.email') }}" class="auth-form space-y-4">

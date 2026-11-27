@@ -1,5 +1,7 @@
 @extends('layouts.guest')
 @section('title', 'Reset password')
+@section('heading', 'Choose a new password')
+@section('subheading', 'Use at least 8 characters, with letters and numbers.')
 @section('content')
 <form method="POST" action="{{ route('password.update') }}" class="auth-form space-y-4">
     @csrf
