@@ -74,6 +74,8 @@ class Create extends Component
 
     public bool $showMpesa = false;
 
+    public bool $mpesaManual = false;
+
     public string $mpesaPhone = '';
 
     public string $mpesaAmount = '';
@@ -133,9 +135,19 @@ class Create extends Component
         $this->payTime = now()->format('Y-m-d\TH:i');
         $this->syncPay();
 
-        if ($value === 'mpesa' && $this->mpesaReady()) {
+        $this->mpesaManual = false;
+        if ($value === 'mpesa') {
             $this->openMpesa();
         }
+    }
+
+    /** M-Pesa not connected yet (or the cashier already has the code): record it by hand instead of sending a prompt. */
+    public function useManualMpesa(): void
+    {
+        $this->mpesaManual = true;
+        $this->showMpesa = false;
+        $this->payFollowsTotal = true;
+        $this->syncPay();
     }
 
     public function updatedPayNow(): void
@@ -211,6 +223,12 @@ class Create extends Component
         }
         if (floor((float) $this->mpesaAmount) != (float) $this->mpesaAmount) {
             $this->addError('mpesaAmount', 'M-Pesa takes whole shillings: no cents.');
+
+            return;
+        }
+
+        if (! $this->mpesaReady()) {
+            $this->addError('mpesaPhone', 'M-Pesa is not connected yet, so no prompt can be sent. Ask an administrator to add the Daraja details on the Company page.');
 
             return;
         }
@@ -331,7 +349,7 @@ class Create extends Component
         $takingPayment = Gate::allows('payments.record') && $this->payMethod !== '';
 
         // M-Pesa with prompts set up is done in its own dialog.
-        if ($takingPayment && $this->payMethod === 'mpesa' && $this->mpesaReady()) {
+        if ($takingPayment && $this->payMethod === 'mpesa' && ! $this->mpesaManual) {
             $this->openMpesa();
 
             return null;

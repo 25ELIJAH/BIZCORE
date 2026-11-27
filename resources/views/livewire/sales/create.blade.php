@@ -106,7 +106,7 @@
                             <x-ui.field label="Amount received ({{ $currency }})" name="payNow"><input id="payNow" type="number" step="0.01" min="0" wire:model="payNow" class="input"></x-ui.field>
                             <p class="text-xs text-slate-500">Recorded as cash received from <strong>{{ $customerName }}</strong>.</p>
                         </div>
-                    @elseif ($payMethod === 'bank_transfer' || ($payMethod === 'mpesa' && ! $mpesaReady))
+                    @elseif ($payMethod === 'bank_transfer' || ($payMethod === 'mpesa' && $mpesaManual))
                         <div class="mt-4 space-y-3">
                             <x-ui.field label="Amount received ({{ $currency }})" name="payNow"><input id="payNow" type="number" step="0.01" min="0" wire:model="payNow" class="input"></x-ui.field>
                             <x-ui.field label="{{ $payMethod === 'mpesa' ? 'M-Pesa code' : 'Transaction code' }}" name="payReference" hint="{{ $payMethod === 'mpesa' ? 'Prompts are not set up yet, so enter the code from the M-Pesa message.' : '' }}"><input id="payReference" type="text" wire:model="payReference" class="input" maxlength="255" autocomplete="off"></x-ui.field>
@@ -127,13 +127,39 @@
     </form>
 
     @if ($showMpesa)
-        <x-ui.modal title="Pay with M-Pesa" close="closeMpesa">
+        <x-ui.modal title="M-Pesa payment" close="closeMpesa" maxWidth="max-w-md">
+            {{-- Amount banner, shown in every step --}}
+            <div class="-mx-5 -mt-4 mb-5 flex items-center gap-3 bg-emerald-600 px-5 py-4 text-white">
+                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white/20">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5h3A2.25 2.25 0 0115.75 3.75v16.5A2.25 2.25 0 0113.5 22.5h-3a2.25 2.25 0 01-2.25-2.25V3.75A2.25 2.25 0 0110.5 1.5zM11 19.5h2"/></svg>
+                </span>
+                <div class="min-w-0">
+                    <p class="text-xs uppercase tracking-wide text-emerald-100">Amount to collect</p>
+                    <p class="truncate text-2xl font-semibold">{{ $currency }} {{ number_format((float) ($mpesaTx->amount ?? ($mpesaAmount !== '' ? $mpesaAmount : 0)), 2) }}</p>
+                </div>
+            </div>
+
             @if (! $mpesaTx)
                 <form wire:submit="sendMpesa" class="space-y-4">
-                    <p class="text-sm text-slate-600">Paying: <strong>{{ $customerName }}</strong>. A prompt goes to this phone and the customer enters their M-Pesa PIN.</p>
-                    <x-ui.field label="Recipient phone (Safaricom)" name="mpesaPhone"><input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input" placeholder="0712 345 678" autofocus autocomplete="off"></x-ui.field>
-                    <x-ui.field label="Amount ({{ $currency }}, whole shillings)" name="mpesaAmount"><input id="mpesaAmount" type="number" step="1" min="1" wire:model="mpesaAmount" class="input"></x-ui.field>
-                    <div class="flex justify-end gap-2">
+                    @unless ($mpesaReady)
+                        <div class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" role="alert">
+                            M-Pesa prompts are not connected yet. An administrator adds the Daraja details on the Company page.
+                            <button type="button" wire:click="useManualMpesa" class="font-semibold underline">I already have the M-Pesa code</button>
+                        </div>
+                    @endunless
+                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                        <span class="text-slate-500">Customer</span><span class="font-medium">{{ $customerName }}</span>
+                    </div>
+                    <x-ui.field label="Recipient phone number" name="mpesaPhone" hint="The Safaricom number that will get the prompt.">
+                        <div class="flex">
+                            <span class="inline-flex items-center rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">+254</span>
+                            <input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input rounded-l-none" placeholder="712 345 678" autofocus autocomplete="off">
+                        </div>
+                    </x-ui.field>
+                    <x-ui.field label="Amount ({{ $currency }})" name="mpesaAmount" hint="Whole shillings only. Enter less to take part payment.">
+                        <input id="mpesaAmount" type="number" step="1" min="1" wire:model.live.debounce.300ms="mpesaAmount" class="input">
+                    </x-ui.field>
+                    <div class="flex justify-end gap-2 pt-1">
                         <button type="button" wire:click="closeMpesa" class="btn-secondary">Cancel</button>
                         <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="sendMpesa">
                             <span wire:loading.remove wire:target="sendMpesa">Send payment prompt</span><span wire:loading wire:target="sendMpesa">Sending&hellip;</span>
@@ -141,26 +167,26 @@
                     </div>
                 </form>
             @elseif ($mpesaTx->status === 'pending')
-                <div wire:poll.3s="checkMpesa" class="space-y-4 py-4 text-center" aria-live="polite">
-                    <svg class="mx-auto h-12 w-12 animate-spin text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-                    <p class="font-semibold text-slate-800">Waiting for payment</p>
-                    <p class="text-sm text-slate-600">A prompt was sent to {{ $mpesaTx->phone }}. Ask the customer to enter their M-Pesa PIN. This updates by itself.</p>
-                    <p class="text-xs text-slate-400">The sale is already saved. You can close this and the payment will still be recorded when it arrives.</p>
+                <div wire:poll.3s="checkMpesa" class="space-y-4 py-2 text-center" aria-live="polite">
+                    <svg class="mx-auto h-14 w-14 animate-spin text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                    <p class="text-lg font-semibold text-slate-800">Waiting for payment</p>
+                    <p class="text-sm text-slate-600">A prompt was sent to <strong>{{ $mpesaTx->phone }}</strong>. Ask {{ $customerName === 'Walk-in customer' ? 'the customer' : $customerName }} to enter their M-Pesa PIN.</p>
+                    <p class="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">The sale is already saved. If you close this, the payment is still recorded when it arrives.</p>
                     <button type="button" wire:click="closeMpesa" class="btn-secondary">Close</button>
                 </div>
             @elseif ($mpesaTx->status === 'success')
                 <div class="space-y-4 text-center">
-                    <svg class="mx-auto h-14 w-14 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.7 2.7L16 9.8"/></svg>
+                    <svg class="mx-auto h-16 w-16 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.7 2.7L16 9.8"/></svg>
                     <p class="text-lg font-semibold text-emerald-700">Payment successful</p>
                     <dl class="divide-y divide-slate-100 rounded-lg border border-slate-200 text-left text-sm">
-                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Name</dt><dd class="font-medium">{{ $customerName }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">M-Pesa code</dt><dd class="font-mono font-medium">{{ $mpesaTx->mpesa_receipt ?: '—' }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Amount</dt><dd class="font-medium">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Phone</dt><dd>{{ $mpesaTx->phone }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Time</dt><dd>{{ ($mpesaTx->completed_at ?? $mpesaTx->updated_at)->format('d M Y, H:i') }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Name</dt><dd class="font-medium">{{ $customerName }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">M-Pesa code</dt><dd class="font-mono font-semibold tracking-wide">{{ $mpesaTx->mpesa_receipt ?: '—' }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Amount</dt><dd class="font-medium">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Phone</dt><dd>{{ $mpesaTx->phone }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Time</dt><dd>{{ ($mpesaTx->completed_at ?? $mpesaTx->updated_at)->format('d M Y, H:i') }}</dd></div>
                     </dl>
                     <p class="text-xs text-slate-500">The payment has been recorded on the sale.</p>
-                    <button type="button" wire:click="goToSale" class="btn-primary">View sale</button>
+                    <button type="button" wire:click="goToSale" class="btn-primary w-full">View sale</button>
                 </div>
             @elseif ($mpesaTx->status === 'needs_review')
                 <div class="space-y-3 text-center">

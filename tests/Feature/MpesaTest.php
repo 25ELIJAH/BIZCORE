@@ -362,7 +362,12 @@ class MpesaTest extends TestCase
         $this->company->forceFill(['settings' => []])->save();
         config(['bizcore.mpesa.consumer_key' => null]);
 
-        $this->newSaleForm()->set('payMethod', 'mpesa')->assertSet('showMpesa', false)->assertSee('M-Pesa code')
+        $before = Sale::count();
+        $form = $this->newSaleForm()->set('payMethod', 'mpesa')->assertSet('showMpesa', true)->assertSee('not connected yet');
+        $form->call('sendMpesa')->assertHasErrors('mpesaPhone');
+        $this->assertSame($before, Sale::count(), 'nothing is saved when the prompt cannot be sent');
+
+        $form->call('useManualMpesa')->assertSet('showMpesa', false)->assertSee('M-Pesa code')
             ->set('payReference', 'RCP123')->call('save')->assertHasNoErrors();
 
         $payment = Sale::latest('id')->first()->payments()->first();
