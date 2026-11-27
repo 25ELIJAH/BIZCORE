@@ -4,6 +4,7 @@ namespace App\Livewire\Company;
 
 use App\Models\Company;
 use App\Services\ActivityLogger;
+use App\Support\Notifier;
 use App\Support\Tenancy\CurrentCompany;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -38,6 +39,9 @@ class Settings extends Component
 
     public string $notice = '';
 
+    /** @var array<string, bool> event key => send an email too (the bell always gets it) */
+    public array $emails = [];
+
     private const SETTING_FIELDS = ['website', 'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch', 'invoice_note'];
 
     public function mount(): void
@@ -51,6 +55,10 @@ class Settings extends Component
 
         foreach (self::SETTING_FIELDS as $field) {
             $this->{$field} = (string) $company->setting($field, '');
+        }
+
+        foreach (array_keys(Notifier::EVENTS) as $event) {
+            $this->emails[Notifier::key($event)] = Notifier::emailEnabled($company, $event);
         }
     }
 
@@ -78,6 +86,10 @@ class Settings extends Component
 
         foreach (self::SETTING_FIELDS as $field) {
             $settings[$field] = $this->{$field} === '' ? null : $this->{$field};
+        }
+
+        foreach (array_keys(Notifier::EVENTS) as $event) {
+            $settings['notifications_email'][Notifier::key($event)] = (bool) ($this->emails[Notifier::key($event)] ?? false);
         }
 
         $company->fill([

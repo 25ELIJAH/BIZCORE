@@ -6,6 +6,7 @@ use App\Enums\StockMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Support\Notifier;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -120,6 +121,13 @@ class StockService
                 $this->activityLogger->log('stock.adjusted', $locked, [
                     'old' => ['quantity' => $previous], 'new' => ['quantity' => $new], 'reason' => $reason,
                 ]);
+            }
+
+            // Tell the stock managers once, when the quantity falls to the minimum, not on every later sale.
+            if (bccomp((string) $locked->min_stock, '0', 3) > 0
+                && bccomp((string) $previous, (string) $locked->min_stock, 3) > 0
+                && bccomp((string) $new, (string) $locked->min_stock, 3) <= 0) {
+                app(Notifier::class)->notify('stock.low', $locked, [], $locked->company_id, Auth::id());
             }
 
             $product->setRawAttributes($locked->getAttributes(), true);

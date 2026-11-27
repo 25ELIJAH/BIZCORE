@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', Dashboard::class)->name('home');
         Route::post('company/switch', [CompanySwitchController::class, 'store'])->name('company.switch');
         Route::get('account', \App\Livewire\Account\Index::class)->name('account');
+        Route::get('notifications', \App\Livewire\Notifications\Inbox::class)->name('notifications.index');
         Route::get('company', \App\Livewire\Company\Settings::class)->name('company.settings')->middleware('can:manage-company');
         Route::get('team', \App\Livewire\Company\Team::class)->name('company.team')->middleware('can:manage-company');
 

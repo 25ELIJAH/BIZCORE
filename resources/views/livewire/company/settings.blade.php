@@ -40,6 +40,16 @@
             @endforeach
         </section>
 
+        <section class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+            <h2 class="text-sm font-semibold">Email notifications</h2>
+            <p class="mt-1 text-sm text-slate-500">The bell in the header always tells the right people. Tick the events that should also be emailed to them. Who is told follows each person's role: approvers hear about leave and purchase orders, managers about sales and stock.</p>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                @foreach (\App\Support\Notifier::EVENTS as $event => $meta)
+                    <label class="flex items-start gap-2 text-sm text-slate-700"><input type="checkbox" wire:model="emails.{{ \App\Support\Notifier::key($event) }}" class="mt-0.5 rounded border-slate-300"> <span>{{ $meta['label'] }}</span></label>
+                @endforeach
+            </div>
+        </section>
+
         <div class="lg:col-span-2"><button type="submit" class="btn-primary" wire:loading.attr="disabled">Save details</button></div>
     </form>
 </div>

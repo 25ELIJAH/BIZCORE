@@ -19,7 +19,7 @@ class RouteSecurityTest extends TestCase
     use CreatesTenants, RefreshDatabase;
 
     /** Routes a signed-in user with no permissions may legitimately open. */
-    private const OPEN_TO_ANY_MEMBER = ['home', 'company.none', 'account', 'two-factor.setup', 'two-factor.recovery', 'two-factor.challenge'];
+    private const OPEN_TO_ANY_MEMBER = ['home', 'company.none', 'account', 'notifications.index', 'two-factor.setup', 'two-factor.recovery', 'two-factor.challenge'];
 
     /** @return list<LaravelRoute> */
     private function protectedGetRoutes(): array

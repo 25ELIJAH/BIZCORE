@@ -88,6 +88,7 @@
         </form>
 
         <div class="ml-auto flex shrink-0 items-center gap-3 text-sm sm:ml-0">
+            @livewire(\App\Livewire\Notifications\Bell::class)
             <span class="hidden font-medium text-slate-700 sm:block">{{ auth()->user()->name }}</span>
             <a href="{{ route('account') }}" title="My account" aria-label="My account" class="rounded-full"><span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white" aria-hidden="true">{{ $initials }}</span></a>
             <form method="POST" action="{{ route('logout') }}">

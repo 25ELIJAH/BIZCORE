@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Support\Notifier;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -20,9 +21,12 @@ class ActivityLogger
      */
     public function log(string $action, ?Model $subject = null, array $properties = [], ?string $description = null, ?int $companyId = null, ?int $userId = null): ActivityLog
     {
-        return ActivityLog::create([
-            'company_id' => $companyId ?? $this->currentCompany->id(),
-            'user_id' => $userId ?? Auth::id(),
+        $companyId ??= $this->currentCompany->id();
+        $userId ??= Auth::id();
+
+        $entry = ActivityLog::create([
+            'company_id' => $companyId,
+            'user_id' => $userId,
             'action' => $action,
             'subject_type' => $subject?->getMorphClass(),
             'subject_id' => $subject?->getKey(),
@@ -30,6 +34,11 @@ class ActivityLogger
             'properties' => $properties === [] ? null : $this->redact($properties),
             'ip_address' => $this->request->ip(),
         ]);
+
+        // Business events (sales, leave, purchase orders...) also tell the right people. Never fails the caller.
+        app(Notifier::class)->notify($action, $subject, $properties, $companyId, $userId);
+
+        return $entry;
     }
 
     private function redact(array $data): array
