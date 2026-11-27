@@ -9,13 +9,14 @@
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="has-shell min-h-screen text-slate-800 antialiased" @if ($errors->any()) data-shake @endif>
+<body class="has-shell auth-body min-h-screen text-slate-800 antialiased" style="--auth-bg: url('{{ asset('images/auth-bg.svg') }}')" @if ($errors->any()) data-shake @endif>
 <div class="min-h-screen lg:flex lg:items-center lg:justify-center lg:p-6">
     <div class="auth-shell grid w-full max-w-5xl overflow-hidden bg-white lg:min-h-[600px] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]">
         {{-- Blue panel with the curved edge --}}
         <aside class="auth-panel hidden flex-col justify-between bg-ink p-10 text-white lg:flex lg:rounded-tr-[72px]">
             <x-brand light size="lg" class="auth-logo" />
             <div>
+                <p class="auth-rise mb-3 text-sm font-medium text-orange-200" style="--i:0">Welcome to BIZCORE</p>
                 <h2 class="auth-rise text-3xl font-bold leading-snug" style="--i:0">Run sales, stock and accounts from <span class="auth-underline">one login.</span></h2>
                 <ul class="mt-7 space-y-3 text-sm text-white/85">
                     <li class="auth-rise flex gap-3" style="--i:1"><span class="auth-bullet-dot mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white" style="--i:1"></span>Invoices, stock and purchasing that always agree</li>

@@ -292,3 +292,18 @@ main table th, main table td, .badge { white-space: nowrap; }
     .auth-shell, .auth-panel, .auth-rise, .auth-underline::after, .auth-bullet-dot,
     .auth-logo, .auth-logo > span:first-child, .auth-head > *, .auth-form > *, [data-shake] .auth-form { animation: none !important; }
 }
+
+/* ---- Sign-in / sign-up screens: warm backdrop ---- */
+body.auth-body { background: var(--auth-bg) center / cover no-repeat fixed, #ffdcb4; }
+.auth-body .auth-shell { background-color: rgb(255 255 255 / 0.93); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+@media (min-width: 1024px) {
+    .auth-body .auth-shell { box-shadow: 0 30px 80px -20px rgb(38 26 102 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.5); }
+}
+.auth-body .auth-panel {
+    background: linear-gradient(180deg, rgb(38 26 102 / 0.58) 0%, rgb(38 26 102 / 0.72) 55%, rgb(38 26 102 / 0.9) 100%), var(--auth-bg) 62% bottom / cover no-repeat;
+}
+.auth-body .auth-head h1 { color: #261a66; }
+.auth-body .auth-form .input { background-color: #fffdfa; border-color: #eadfd2; }
+.auth-body .auth-form .input:hover { border-color: #d9c6b0; }
+.auth-body .auth-form .btn-primary[type='submit'] { box-shadow: 0 8px 20px -8px rgb(239 95 24 / 0.65); }
+.auth-body .auth-form a { text-underline-offset: 3px; }
