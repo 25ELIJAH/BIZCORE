@@ -93,7 +93,7 @@
             @can('payments.record')
                 <section class="rounded-xl border border-slate-200 bg-white p-5">
                     @php
-                        $paying = bccomp($payNow ?: '0', '0', 2) > 0;
+                        $paying = $takePayment;
                         $stkOn = $paying && $payMethod === 'mpesa' && $mpesaReady;
                         $tile = 'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors';
                     @endphp

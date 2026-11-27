@@ -81,18 +81,62 @@ class Create extends Component
 
         $this->resetValidation(['payNow', 'mpesaPhone']);
         $this->payMethod = $method;
-
-        $amount = bccomp($this->payNow ?: '0', '0', 2) > 0 ? $this->payNow : $this->preview()['total'];
-        // M-Pesa takes whole shillings only.
-        $this->payNow = ($method === 'mpesa' && $mpesa->isConfigured($company)) ? (string) floor((float) $amount) : (string) $amount;
+        $this->takePayment = true;
+        $this->payFollowsTotal = true;
+        $this->syncPay();
 
         if ($method === 'mpesa' && $this->mpesaPhone === '' && $this->customerId) {
             $this->mpesaPhone = (string) (Customer::whereKey($this->customerId)->value('phone') ?? '');
         }
     }
 
+    /** True once a payment tile is chosen (even before items are added); false means Pay later. */
+    public bool $takePayment = false;
+
+    /** While true the amount follows the sale total as items change; typing an amount stops that. */
+    public bool $payFollowsTotal = true;
+
+    public function updatedPayNow(): void
+    {
+        $this->payFollowsTotal = false;
+        $this->takePayment = bccomp(is_numeric($this->payNow) ? $this->payNow : '0', '0', 2) > 0 || $this->takePayment;
+    }
+
+    public function updatedLines(): void
+    {
+        $this->syncPay();
+    }
+
+    public function updatedDiscountValue(): void
+    {
+        $this->syncPay();
+    }
+
+    public function updatedDiscountType(): void
+    {
+        $this->syncPay();
+    }
+
+    public function updatedTaxRate(): void
+    {
+        $this->syncPay();
+    }
+
+    private function syncPay(): void
+    {
+        if (! $this->takePayment || ! $this->payFollowsTotal) {
+            return;
+        }
+
+        $total = $this->preview()['total'];
+        $stk = $this->payMethod === 'mpesa' && app(MpesaService::class)->isConfigured(app(CurrentCompany::class)->get());
+        // M-Pesa takes whole shillings only.
+        $this->payNow = $stk ? (string) floor((float) $total) : (string) $total;
+    }
+
     public function payLater(): void
     {
+        $this->takePayment = false;
         $this->payNow = '';
         $this->payReference = '';
         $this->resetValidation(['payNow', 'mpesaPhone']);
@@ -108,6 +152,7 @@ class Create extends Component
             if ($line['product_id'] === $product->id) {
                 $this->lines[$i]['quantity'] = (string) ((float) $line['quantity'] + 1);
                 $this->productSearch = '';
+                $this->syncPay();
 
                 return;
             }
@@ -124,6 +169,7 @@ class Create extends Component
         ];
         $this->productSearch = '';
         $this->resetErrorBag('lines');
+        $this->syncPay();
     }
 
     public function removeLine(int $index): void
@@ -132,6 +178,7 @@ class Create extends Component
 
         unset($this->lines[$index]);
         $this->lines = array_values($this->lines);
+        $this->syncPay();
     }
 
     public function save(SaleService $sales, MpesaService $mpesa)
@@ -164,7 +211,7 @@ class Create extends Component
         // Paying by M-Pesa: the prompt is sent after the sale is saved. Check what we can first, so a typo in
         // the phone number does not leave a sale behind with no payment.
         $company = app(CurrentCompany::class)->get();
-        $takingPayment = Gate::allows('payments.record') && bccomp($this->payNow ?: '0', '0', 2) > 0;
+        $takingPayment = Gate::allows('payments.record') && $this->takePayment && bccomp($this->payNow ?: '0', '0', 2) > 0;
         $stk = $takingPayment && $this->payMethod === 'mpesa' && $mpesa->isConfigured($company);
 
         if ($stk) {

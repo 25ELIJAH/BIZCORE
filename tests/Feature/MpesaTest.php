@@ -252,6 +252,29 @@ class MpesaTest extends TestCase
             ->call('addProduct', $product->id);
     }
 
+
+    public function test_every_payment_tile_records_the_payment_with_method_reference_user_and_an_audit_entry(): void
+    {
+        $this->company->forceFill(['settings' => []])->save();
+        config(['bizcore.mpesa.consumer_key' => null]);
+
+        foreach (array_keys($this->company->fresh()->paymentMethods()) as $slug) {
+            $this->newSaleForm()->call('selectPay', $slug)->assertSet('payMethod', $slug)
+                ->set('payNow', '400')->set('payReference', "REF-$slug")->call('save')->assertHasNoErrors();
+
+            $sale = Sale::latest('id')->first();
+            $payment = $sale->payments()->first();
+            $this->assertNotNull($payment, "$slug recorded no payment");
+            $this->assertSame($slug, $payment->method);
+            $this->assertSame('400.00', (string) $payment->amount);
+            $this->assertSame("REF-$slug", $payment->reference);
+            $this->assertNotNull($payment->user_id, "$slug payment has no recorded user");
+            $this->assertSame('partial', $sale->payment_status, "$slug part payment should leave the sale part-paid");
+            $this->assertSame('600.00', $sale->balance());
+            $this->assertDatabaseHas('activity_logs', ['action' => 'payment.recorded', 'subject_id' => $payment->id]);
+        }
+    }
+
     public function test_choosing_mpesa_on_the_new_sale_screen_sends_the_prompt_when_the_sale_is_completed(): void
     {
         $this->fakeDaraja();
