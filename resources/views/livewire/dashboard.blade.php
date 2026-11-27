@@ -13,6 +13,8 @@
         <p class="text-sm text-slate-500">Currency {{ $currency }} &middot; figures update each time you open this page.</p>
     </div>
 
+    @livewire(\App\Livewire\Dashboard\Attention::class)
+
     @if ($data === [])
         <p class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">There is nothing to show on your dashboard yet. Use the menu to open the areas you have access to.</p>
     @endif

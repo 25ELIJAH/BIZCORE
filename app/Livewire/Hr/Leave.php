@@ -5,6 +5,7 @@ namespace App\Livewire\Hr;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Services\EmployeeService;
 use App\Services\LeaveService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -69,6 +70,21 @@ class Leave extends Component
         if (! $own && filled(Auth::user()->email)) {
             $own = Employee::whereNull('user_id')->where('status', Employee::ACTIVE)->where('email', Auth::user()->email)->first();
             $own?->forceFill(['user_id' => Auth::id()])->save();
+        }
+
+        // Still nothing: give this person a basic employee record of their own, so leave works from day one.
+        // HR can complete the details (department, job title, pay) later under Employees.
+        if (! $own && Gate::allows('leave.request') && ! $this->seesAll()) {
+            try {
+                $user = Auth::user();
+                $parts = preg_split('/\s+/', trim($user->name), 2);
+                $own = app(EmployeeService::class)->save([
+                    'first_name' => $parts[0] ?: 'Staff', 'last_name' => $parts[1] ?? '-',
+                    'email' => $user->email, 'user_id' => $user->id, 'hire_date' => today(),
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return $own;

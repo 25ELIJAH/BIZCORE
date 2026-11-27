@@ -196,6 +196,57 @@ class NotificationsTest extends TestCase
         $this->assertTrue(Notifier::emailEnabled($company, 'leave.requested'));
     }
 
+    public function test_a_staff_login_without_an_employee_record_gets_one_so_leave_works(): void
+    {
+        $this->actingAs($this->staff);
+
+        Livewire::test(\App\Livewire\Hr\Leave::class)->assertOk();
+
+        $employee = \App\Models\Employee::where('user_id', $this->staff->id)->first();
+        $this->assertNotNull($employee);
+        $this->assertSame($this->staff->email, $employee->email);
+    }
+
+    public function test_an_approver_decides_leave_from_the_dashboard_and_the_employee_sees_the_outcome(): void
+    {
+        $hr = $this->userWithRole('hr-officer', $this->company);
+        $this->actingAs($hr);
+        $employee = app(EmployeeService::class)->save(['first_name' => 'Amina', 'last_name' => 'Otieno', 'hire_date' => '2024-01-01', 'user_id' => $this->staff->id], null, true);
+        $monday = today()->next('Monday')->addWeeks(2);
+
+        $this->actingAs($this->staff);
+        $first = app(LeaveService::class)->request($employee, 'annual', $monday, $monday->copy()->addDay());
+        $second = app(LeaveService::class)->request($employee, 'sick', $monday->copy()->addWeeks(3), $monday->copy()->addWeeks(3));
+
+        $this->actingAs($hr);
+        Livewire::test(\App\Livewire\Dashboard\Attention::class)
+            ->assertSee('Amina Otieno')
+            ->call('approve', $first->id)
+            ->call('startReject', $second->id)
+            ->set('reason', 'Team is short that day')
+            ->call('reject');
+
+        $this->assertSame('approved', $first->fresh()->status);
+        $this->assertSame('rejected', $second->fresh()->status);
+
+        $this->actingAs($this->staff);
+        Livewire::test(\App\Livewire\Dashboard\Attention::class)->assertSee('Approved')->assertSee('Rejected')->assertSee('Team is short that day');
+        $this->assertCount(2, $this->noticesFor($this->staff, 'leave.decided'));
+    }
+
+    public function test_a_plain_employee_cannot_decide_leave_from_the_dashboard(): void
+    {
+        $hr = $this->userWithRole('hr-officer', $this->company);
+        $this->actingAs($hr);
+        $employee = app(EmployeeService::class)->save(['first_name' => 'Amina', 'last_name' => 'Otieno', 'hire_date' => '2024-01-01', 'user_id' => $this->staff->id], null, true);
+        $monday = today()->next('Monday')->addWeeks(2);
+        $this->actingAs($this->staff);
+        $request = app(LeaveService::class)->request($employee, 'annual', $monday, $monday->copy()->addDay());
+
+        Livewire::test(\App\Livewire\Dashboard\Attention::class)->call('approve', $request->id)->assertForbidden();
+        $this->assertSame('pending', $request->fresh()->status);
+    }
+
     public function test_the_notifications_page_renders_for_any_member(): void
     {
         $this->actingAs($this->staff)->get(route('notifications.index'))->assertOk()->assertSee('Notifications');
