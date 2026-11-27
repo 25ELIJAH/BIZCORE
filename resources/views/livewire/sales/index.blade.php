@@ -19,6 +19,10 @@
         </select>
         <input type="date" wire:model.live="from" aria-label="From date" class="input">
         <input type="date" wire:model.live="to" aria-label="To date" class="input">
+        <select wire:model.live="rep" aria-label="Sales representative" class="input">
+            <option value="">All sales reps</option>
+            @foreach ($reps as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach
+        </select>
         <select wire:model.live="customer" aria-label="Customer" class="input lg:col-span-2">
             <option value="">All customers</option>
             @foreach ($customers as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
@@ -29,7 +33,7 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                    <th class="px-4 py-3">Invoice</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Customer</th>
+                    <th class="px-4 py-3">Invoice</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Sales rep</th>
                     <th class="px-4 py-3 text-right">Total ({{ $currency }})</th><th class="px-4 py-3 text-right">Balance</th><th class="px-4 py-3">Due</th><th class="px-4 py-3">Status</th>
                 </tr>
             </thead>
@@ -39,13 +43,14 @@
                         <td class="px-4 py-3"><a href="{{ route('sales.show', $sale) }}" class="font-medium text-indigo-600 hover:underline">{{ $sale->invoice?->invoice_number }}</a></td>
                         <td class="px-4 py-3 text-slate-600">{{ $sale->sale_date->format('Y-m-d') }}</td>
                         <td class="px-4 py-3">{{ $sale->customer?->name ?? 'Walk-in customer' }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ $sale->user?->name ?? 'Unknown' }}</td>
                         <td class="px-4 py-3 text-right">{{ number_format((float) $sale->total, 2) }}</td>
                         <td class="px-4 py-3 text-right">{{ number_format((float) $sale->balance(), 2) }}</td>
                         <td class="px-4 py-3 text-slate-600">{{ $sale->due_date->format('Y-m-d') }}</td>
                         <td class="px-4 py-3"><x-sales.status :sale="$sale" /></td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-4 py-12 text-center text-slate-500">No sales match these filters.</td></tr>
+                    <tr><td colspan="8" class="px-4 py-12 text-center text-slate-500">No sales match these filters.</td></tr>
                 @endforelse
             </tbody>
         </table>

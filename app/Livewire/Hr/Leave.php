@@ -62,7 +62,16 @@ class Leave extends Component
 
     private function ownEmployee(): ?Employee
     {
-        return Employee::where('user_id', Auth::id())->where('status', Employee::ACTIVE)->first();
+        $own = Employee::where('user_id', Auth::id())->where('status', Employee::ACTIVE)->first();
+
+        // HR often creates the employee record first. If it carries this person's email and is not yet linked
+        // to any login, link it now so they can ask for leave without waiting for HR to do it by hand.
+        if (! $own && filled(Auth::user()->email)) {
+            $own = Employee::whereNull('user_id')->where('status', Employee::ACTIVE)->where('email', Auth::user()->email)->first();
+            $own?->forceFill(['user_id' => Auth::id()])->save();
+        }
+
+        return $own;
     }
 
     private function seesAll(): bool
