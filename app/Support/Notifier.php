@@ -41,7 +41,7 @@ class Notifier
     public const EVENTS = [
         'sale.created' => ['label' => 'A sale is made', 'email' => true, 'permission' => 'activity_logs.view'],
         'sale.cancelled' => ['label' => 'A sale is cancelled', 'email' => true, 'permission' => 'activity_logs.view'],
-        'payment.recorded' => ['label' => 'A customer payment is recorded', 'email' => false, 'permission' => 'activity_logs.view'],
+        'payment.recorded' => ['label' => 'A customer payment is recorded', 'email' => false, 'permission' => 'finance.manage'],
         'leave.requested' => ['label' => 'An employee asks for leave', 'email' => true, 'permission' => 'leave.approve'],
         'leave.decided' => ['label' => 'Leave is approved or rejected (tells the employee)', 'email' => true, 'recipients' => 'leavePeople'],
         'purchase_order.submitted' => ['label' => 'A purchase order needs approval', 'email' => true, 'permission' => 'purchase_orders.approve'],
