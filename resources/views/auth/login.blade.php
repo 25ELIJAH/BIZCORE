@@ -15,7 +15,7 @@
                class="input">
         @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
-    <div class="flex items-center justify-between text-sm">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
         <label class="flex items-center gap-2"><input type="checkbox" name="remember" class="rounded border-slate-300"> Remember me</label>
         <a href="{{ route('password.request') }}" class="text-indigo-600 hover:underline">Forgot password?</a>
     </div>
