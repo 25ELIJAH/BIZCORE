@@ -92,15 +92,35 @@
 
             @can('payments.record')
                 <section class="rounded-xl border border-slate-200 bg-white p-5">
-                    <h2 class="mb-1 font-semibold">Payment received now</h2>
-                    <p class="mb-3 text-xs text-slate-500">Optional. A partial amount leaves the invoice partially paid.</p>
-                    <div class="space-y-3">
-                        <x-ui.field label="Amount" name="payNow"><input id="payNow" type="number" step="0.01" min="0" wire:model="payNow" class="input"></x-ui.field>
-                        <x-ui.field label="Method" name="payMethod">
-                            <select id="payMethod" wire:model="payMethod" class="input">@foreach ($paymentMethods as $slug => $label)<option value="{{ $slug }}">{{ $label }}</option>@endforeach</select>
-                        </x-ui.field>
-                        <x-ui.field label="Reference" name="payReference"><input id="payReference" type="text" wire:model="payReference" class="input" maxlength="255"></x-ui.field>
+                    @php
+                        $paying = bccomp($payNow ?: '0', '0', 2) > 0;
+                        $stkOn = $paying && $payMethod === 'mpesa' && $mpesaReady;
+                        $tile = 'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors';
+                    @endphp
+                    <h2 class="mb-1 font-semibold">How is the customer paying?</h2>
+                    <p class="mb-3 text-xs text-slate-500">Choose one. Leave it on Pay later to invoice now. A smaller amount leaves the invoice partly paid.</p>
+                    <div class="grid grid-cols-3 gap-2" role="group" aria-label="Payment method">
+                        <button type="button" wire:click="payLater" aria-pressed="{{ $paying ? 'false' : 'true' }}" class="{{ $tile }} {{ $paying ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-indigo-600 bg-indigo-50 text-indigo-700' }}">
+                            <x-sales.pay-icon method="later" /> Pay later
+                        </button>
+                        @foreach ($paymentMethods as $slug => $label)
+                            @php($on = $paying && $payMethod === $slug)
+                            <button type="button" wire:click="selectPay('{{ $slug }}')" aria-pressed="{{ $on ? 'true' : 'false' }}" class="{{ $tile }} {{ $on ? ($slug === 'mpesa' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-indigo-600 bg-indigo-50 text-indigo-700') : 'border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                                <x-sales.pay-icon :method="$slug" /> {{ $label }}
+                            </button>
+                        @endforeach
                     </div>
+
+                    @if ($paying)
+                        <div class="mt-4 space-y-3">
+                            <x-ui.field label="Amount ({{ $currency }}){{ $stkOn ? ', whole shillings' : '' }}" name="payNow"><input id="payNow" type="number" step="{{ $stkOn ? '1' : '0.01' }}" min="0" wire:model="payNow" class="input"></x-ui.field>
+                            @if ($stkOn)
+                                <x-ui.field label="Customer phone (Safaricom)" name="mpesaPhone" hint="A prompt is sent to this phone when you complete the sale. The payment is recorded automatically once they enter their PIN."><input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input" placeholder="0712 345 678" autocomplete="off"></x-ui.field>
+                            @else
+                                <x-ui.field label="Reference" name="payReference" hint="{{ $payMethod === 'mpesa' ? 'M-Pesa prompts are not set up yet, so enter the receipt number of the payment.' : '' }}"><input id="payReference" type="text" wire:model="payReference" class="input" maxlength="255"></x-ui.field>
+                            @endif
+                        </div>
+                    @endif
                 </section>
             @endcan
 

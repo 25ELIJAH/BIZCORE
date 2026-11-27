@@ -242,6 +242,88 @@ class MpesaTest extends TestCase
         Livewire::test(Show::class, ['sale' => Sale::find($this->sale->id)])->assertDontSee('Pay with M-Pesa');
     }
 
+    private function newSaleForm(string $phone = '0712345678')
+    {
+        $product = Product::factory()->create(['selling_price' => 1000, 'min_stock' => 0]);
+        app(StockService::class)->add($product, 10);
+
+        return Livewire::test(\App\Livewire\Sales\Create::class)
+            ->set('customerId', Customer::factory()->create(['phone' => $phone])->id)
+            ->call('addProduct', $product->id);
+    }
+
+    public function test_choosing_mpesa_on_the_new_sale_screen_sends_the_prompt_when_the_sale_is_completed(): void
+    {
+        $this->fakeDaraja();
+
+        $form = $this->newSaleForm()->call('selectPay', 'mpesa')
+            ->assertSet('payMethod', 'mpesa')->assertSet('payNow', '1000')->assertSet('mpesaPhone', '0712345678')
+            ->assertSee('Customer phone');
+        $form->call('save')->assertHasNoErrors();
+
+        $sale = Sale::latest('id')->first();
+        $tx = MpesaTransaction::where('sale_id', $sale->id)->first();
+        $this->assertNotNull($tx);
+        $this->assertSame('pending', $tx->status);
+        $this->assertCount(0, $sale->payments()->get(), 'nothing is recorded until the customer pays');
+        $form->assertRedirect(route('sales.show', ['sale' => $sale, 'mpesa' => $tx->id]));
+
+        // The sale page opens straight into the waiting screen, and the callback completes it.
+        Livewire::withQueryParams(['mpesa' => $tx->id])->test(Show::class, ['sale' => $sale])->assertSet('showMpesa', true)->assertSee('Prompt sent to');
+        $this->hitCallback($tx)->assertOk();
+        $this->assertSame('paid', $sale->fresh()->payment_status);
+    }
+
+    public function test_a_bad_phone_on_the_new_sale_screen_stops_before_any_sale_is_saved(): void
+    {
+        $this->fakeDaraja();
+        $before = Sale::count();
+
+        $this->newSaleForm('')->call('selectPay', 'mpesa')->set('mpesaPhone', '07123')->call('save')->assertHasErrors('mpesaPhone');
+
+        $this->assertSame($before, Sale::count());
+        $this->assertSame(0, MpesaTransaction::count());
+    }
+
+    public function test_if_the_prompt_cannot_be_sent_the_sale_is_still_saved_with_a_clear_message(): void
+    {
+        $this->fakeDaraja(['errorMessage' => 'Bad Request - Invalid Amount', 'requestId' => 'x']);
+        $before = Sale::count();
+
+        $this->newSaleForm()->call('selectPay', 'mpesa')->call('save')->assertHasNoErrors();
+
+        $this->assertSame($before + 1, Sale::count());
+        $this->assertStringContainsString('prompt was not sent', session('status'));
+        $this->assertSame('failed', MpesaTransaction::first()->status);
+    }
+
+    public function test_cash_and_pay_later_still_work_from_the_same_tiles(): void
+    {
+        $cash = $this->newSaleForm()->call('selectPay', 'cash')->assertSet('payNow', '1000.00');
+        $cash->call('save')->assertHasNoErrors();
+        $paid = Sale::latest('id')->first();
+        $this->assertSame('cash', $paid->payments()->first()->method);
+        $this->assertSame('paid', $paid->payment_status);
+
+        $later = $this->newSaleForm()->call('selectPay', 'cash')->call('payLater')->assertSet('payNow', '');
+        $later->call('save')->assertHasNoErrors();
+        $this->assertCount(0, Sale::latest('id')->first()->payments()->get());
+    }
+
+    public function test_without_mpesa_details_the_tile_asks_for_a_receipt_number_instead_of_a_prompt(): void
+    {
+        $this->company->forceFill(['settings' => []])->save();
+        config(['bizcore.mpesa.consumer_key' => null]);
+
+        $this->newSaleForm()->call('selectPay', 'mpesa')->assertDontSee('Customer phone')->assertSee('receipt number')
+            ->set('payReference', 'RCP123')->call('save')->assertHasNoErrors();
+
+        $payment = Sale::latest('id')->first()->payments()->first();
+        $this->assertSame('mpesa', $payment->method);
+        $this->assertSame('RCP123', $payment->reference);
+        Http::assertNothingSent();
+    }
+
     public function test_the_callback_needs_no_login_but_other_companies_cannot_reach_a_payment_through_the_page(): void
     {
         $this->fakeDaraja();

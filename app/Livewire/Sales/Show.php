@@ -13,6 +13,7 @@ use App\Services\PaymentService;
 use App\Services\SaleService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -62,6 +63,16 @@ class Show extends Component
     {
         $this->authorize('sales.view');
         $this->sale = $sale;
+
+        // Arriving straight from "Complete sale" with an M-Pesa prompt on the customer's phone: show it waiting.
+        $pushed = (int) request()->query('mpesa');
+        if ($pushed && Gate::allows('payments.record')) {
+            $tx = MpesaTransaction::where('company_id', app(CurrentCompany::class)->id())->where('sale_id', $sale->id)->find($pushed);
+            if ($tx) {
+                $this->mpesaTxId = $tx->id;
+                $this->showMpesa = true;
+            }
+        }
     }
 
     public function openPayment(): void

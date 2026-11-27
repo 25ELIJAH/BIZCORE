@@ -6,10 +6,12 @@ use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Services\MpesaService;
 use App\Services\SaleService;
 use App\Support\Money;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -48,6 +50,9 @@ class Create extends Component
 
     public string $payReference = '';
 
+    /** The phone that gets the M-Pesa prompt when the sale is completed. */
+    public string $mpesaPhone = '';
+
     /** Makes the optional first payment safe against double submits. */
     public string $paymentKey = '';
 
@@ -65,6 +70,32 @@ class Create extends Component
         if ($this->customerId && ! Customer::where('is_active', true)->whereKey($this->customerId)->exists()) {
             $this->customerId = null;
         }
+    }
+
+    /** The payment tiles: pick how the customer pays. Picking one fills in the full total to start with. */
+    public function selectPay(string $method, MpesaService $mpesa): void
+    {
+        $this->authorize('payments.record');
+        $company = app(CurrentCompany::class)->get();
+        abort_unless(array_key_exists($method, $company->paymentMethods()), 422);
+
+        $this->resetValidation(['payNow', 'mpesaPhone']);
+        $this->payMethod = $method;
+
+        $amount = bccomp($this->payNow ?: '0', '0', 2) > 0 ? $this->payNow : $this->preview()['total'];
+        // M-Pesa takes whole shillings only.
+        $this->payNow = ($method === 'mpesa' && $mpesa->isConfigured($company)) ? (string) floor((float) $amount) : (string) $amount;
+
+        if ($method === 'mpesa' && $this->mpesaPhone === '' && $this->customerId) {
+            $this->mpesaPhone = (string) (Customer::whereKey($this->customerId)->value('phone') ?? '');
+        }
+    }
+
+    public function payLater(): void
+    {
+        $this->payNow = '';
+        $this->payReference = '';
+        $this->resetValidation(['payNow', 'mpesaPhone']);
     }
 
     public function addProduct(int $productId): void
@@ -103,7 +134,7 @@ class Create extends Component
         $this->lines = array_values($this->lines);
     }
 
-    public function save(SaleService $sales)
+    public function save(SaleService $sales, MpesaService $mpesa)
     {
         $this->authorize('sales.create');
 
@@ -130,6 +161,32 @@ class Create extends Component
             'lines.min' => 'Add at least one product to the sale.',
         ], ['lines.*.quantity' => 'quantity', 'lines.*.unit_price' => 'unit price']);
 
+        // Paying by M-Pesa: the prompt is sent after the sale is saved. Check what we can first, so a typo in
+        // the phone number does not leave a sale behind with no payment.
+        $company = app(CurrentCompany::class)->get();
+        $takingPayment = Gate::allows('payments.record') && bccomp($this->payNow ?: '0', '0', 2) > 0;
+        $stk = $takingPayment && $this->payMethod === 'mpesa' && $mpesa->isConfigured($company);
+
+        if ($stk) {
+            $phone = $this->mpesaPhone !== '' ? $this->mpesaPhone : (string) ($this->customerId ? Customer::whereKey($this->customerId)->value('phone') : '');
+
+            if (MpesaService::normalizePhone($phone) === null) {
+                $this->addError('mpesaPhone', 'Enter the customer\'s Safaricom number, for example 0712 345 678.');
+
+                return null;
+            }
+            if ((float) $this->payNow < 1 || floor((float) $this->payNow) != (float) $this->payNow) {
+                $this->addError('payNow', 'M-Pesa takes whole shillings: enter an amount of 1 or more with no cents.');
+
+                return null;
+            }
+            if (Money::compare(Money::round($this->payNow), $this->preview()['total']) > 0) {
+                $this->addError('payNow', 'The amount is more than the sale total.');
+
+                return null;
+            }
+        }
+
         try {
             $sale = $sales->create([
                 'customer_id' => $this->customerId,
@@ -141,7 +198,7 @@ class Create extends Component
                 'tax_rate' => $this->taxRate,
                 'items' => array_map(fn ($l) => Arr::only($l, ['product_id', 'quantity', 'unit_price']), $this->lines),
                 // Taking money needs its own permission; ignore the field for users who lack it.
-                'payment' => Gate::allows('payments.record') && bccomp($this->payNow ?: '0', '0', 2) > 0
+                'payment' => $takingPayment && ! $stk
                     ? ['amount' => $this->payNow, 'method' => $this->payMethod, 'reference' => $this->payReference ?: null, 'idempotency_key' => $this->paymentKey]
                     : null,
             ]);
@@ -157,6 +214,17 @@ class Create extends Component
 
         $this->completedSaleId = $sale->id;
         session()->flash('status', "Sale {$sale->invoice->invoice_number} recorded.");
+
+        if ($stk) {
+            try {
+                $tx = $mpesa->stkPush($sale, $phone, $this->payNow, Auth::user());
+
+                return $this->redirectRoute('sales.show', ['sale' => $sale, 'mpesa' => $tx->id], navigate: true);
+            } catch (BusinessRuleException $e) {
+                // The sale is safe; only the prompt failed. Say so, and the cashier can try again from the sale.
+                session()->flash('status', "Sale {$sale->invoice->invoice_number} recorded, but the M-Pesa prompt was not sent: {$e->getMessage()} Use Pay with M-Pesa on this page to try again.");
+            }
+        }
 
         return $this->redirectRoute('sales.show', $sale, navigate: true);
     }
@@ -194,6 +262,7 @@ class Create extends Component
             'results' => $results,
             'totals' => $this->preview(),
             'paymentMethods' => $company->paymentMethods(),
+            'mpesaReady' => app(MpesaService::class)->isConfigured($company),
             'currency' => $company->currency,
             'allowNegative' => (bool) $company->setting('allow_negative_stock', false),
         ]);
