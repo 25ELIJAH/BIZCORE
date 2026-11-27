@@ -62,7 +62,7 @@
             <form wire:submit="save" class="grid gap-4 sm:grid-cols-2">
                 <x-ui.field label="Name" name="form.name" class="sm:col-span-2"><input id="form.name" type="text" wire:model="form.name" class="input" autofocus></x-ui.field>
                 <x-ui.field label="Contact person" name="form.contact_person"><input id="form.contact_person" type="text" wire:model="form.contact_person" class="input"></x-ui.field>
-                <x-ui.field label="Tax / VAT number" name="form.tax_number"><input id="form.tax_number" type="text" wire:model="form.tax_number" class="input"></x-ui.field>
+                <x-ui.field label="KRA PIN" name="form.tax_number" hint="A letter, nine digits and a letter, for example A001234567B."><input id="form.tax_number" type="text" wire:model="form.tax_number" maxlength="11" class="input uppercase"></x-ui.field>
                 <x-ui.field label="Email" name="form.email"><input id="form.email" type="email" wire:model="form.email" class="input"></x-ui.field>
                 <x-ui.field label="Phone" name="form.phone"><input id="form.phone" type="text" wire:model="form.phone" class="input"></x-ui.field>
                 <x-ui.field label="Address" name="form.address" class="sm:col-span-2"><textarea id="form.address" rows="2" wire:model="form.address" class="input"></textarea></x-ui.field>

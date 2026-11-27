@@ -59,7 +59,9 @@ class SaleService
             if (! is_numeric($taxRate) || bccomp($taxRate, '0', 2) < 0 || bccomp($taxRate, '100', 2) > 0) {
                 throw new BusinessRuleException('Tax rate must be between 0 and 100.');
             }
-            $taxAmount = Money::mul($taxable, bcdiv($taxRate, '100', 6));
+            // VAT applies to standard-rate lines only; the discount is spread over the lines in proportion to their value.
+            $bases = $this->vatBases($items, $subtotal, $discountAmount);
+            $taxAmount = Money::mul($bases['standard'], bcdiv($taxRate, '100', 6));
             $total = Money::add($taxable, $taxAmount);
 
             $saleDate = Carbon::parse($data['sale_date'] ?? today());
@@ -81,6 +83,9 @@ class SaleService
                 'discount_amount' => $discountAmount,
                 'tax_rate' => $taxRate,
                 'tax_amount' => $taxAmount,
+                'vatable_amount' => $bases['standard'],
+                'zero_rated_amount' => $bases['zero_rated'],
+                'exempt_amount' => $bases['exempt'],
                 'total' => $total,
                 'amount_paid' => '0.00',
                 'notes' => $data['notes'] ?? null,
@@ -107,6 +112,7 @@ class SaleService
                     'unit_price' => $line['unit_price'],
                     'unit_cost' => $product->average_cost,
                     'line_total' => $line['line_total'],
+                    'tax_type' => $line['tax_type'],
                 ])->save();
 
                 // Throws InsufficientStockException (rolling everything back) when stock is short.
@@ -201,10 +207,33 @@ class SaleService
 
             $lineTotal = Money::mul($quantity, $price);
             $subtotal = Money::add($subtotal, $lineTotal);
-            $priced[] = ['product' => $product, 'quantity' => $quantity, 'unit_price' => $price, 'line_total' => $lineTotal];
+            $priced[] = ['product' => $product, 'quantity' => $quantity, 'unit_price' => $price, 'line_total' => $lineTotal, 'tax_type' => $product->tax_type ?: 'standard'];
         }
 
         return [$priced, $subtotal];
+    }
+
+    /**
+     * Net sales (after discount) per VAT category.
+     *
+     * @return array{standard: string, zero_rated: string, exempt: string}
+     */
+    private function vatBases(array $items, string $subtotal, string $discountAmount): array
+    {
+        $bases = ['standard' => '0.00', 'zero_rated' => '0.00', 'exempt' => '0.00'];
+        $left = $discountAmount;
+        $last = array_key_last($items);
+
+        foreach ($items as $i => $line) {
+            $share = $i === $last || bccomp($subtotal, '0', 2) === 0
+                ? $left
+                : Money::mul($discountAmount, bcdiv($line['line_total'], $subtotal, 8));
+            $left = Money::sub($left, $share);
+            $type = array_key_exists($line['tax_type'], $bases) ? $line['tax_type'] : 'standard';
+            $bases[$type] = Money::add($bases[$type], Money::sub($line['line_total'], $share));
+        }
+
+        return $bases;
     }
 
     /** @return array{0: string, 1: string, 2: string} type, entered value, amount taken off */

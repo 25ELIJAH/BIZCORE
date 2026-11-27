@@ -35,10 +35,15 @@ class PartyForm extends Form
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:1000'],
-            'tax_number' => ['nullable', 'string', 'max:64'],
+            'tax_number' => ['nullable', 'regex:/^[AP]\d{9}[A-Z]$/i'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['boolean'],
         ];
+    }
+
+    protected function messages(): array
+    {
+        return ['tax_number.regex' => 'Use the KRA PIN format: a letter, nine digits and a letter (for example A001234567B).'];
     }
 
     public function fillFrom(Model $party): void
@@ -56,6 +61,7 @@ class PartyForm extends Form
         return collect($this->all())->except('id')
             ->map(fn ($value) => is_string($value) ? (trim($value) === '' ? null : trim($value)) : $value)
             ->put('name', trim($this->name))
+            ->put('tax_number', trim($this->tax_number) === '' ? null : strtoupper(trim($this->tax_number)))
             ->all();
     }
 }

@@ -84,7 +84,9 @@
             <dl class="space-y-1 text-sm">
                 <div class="flex justify-between"><dt class="text-slate-600">Subtotal</dt><dd>{{ number_format((float) $sale->subtotal, 2) }}</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-600">Discount{{ $sale->discount_type === 'percent' ? " ({$sale->discount_value}%)" : '' }}</dt><dd>− {{ number_format((float) $sale->discount_amount, 2) }}</dd></div>
-                <div class="flex justify-between"><dt class="text-slate-600">Tax ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') ?: '0' }}%)</dt><dd>{{ number_format((float) $sale->tax_amount, 2) }}</dd></div>
+                @if (bccomp((string) $sale->zero_rated_amount, '0', 2) > 0)<div class="flex justify-between text-xs text-slate-500"><dt>Zero-rated sales</dt><dd>{{ number_format((float) $sale->zero_rated_amount, 2) }}</dd></div>@endif
+                @if (bccomp((string) $sale->exempt_amount, '0', 2) > 0 && bccomp((string) $sale->vatable_amount, '0', 2) > 0)<div class="flex justify-between text-xs text-slate-500"><dt>VAT-exempt sales</dt><dd>{{ number_format((float) $sale->exempt_amount, 2) }}</dd></div>@endif
+                <div class="flex justify-between"><dt class="text-slate-600">VAT ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') ?: '0' }}%)</dt><dd>{{ number_format((float) $sale->tax_amount, 2) }}</dd></div>
                 <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold"><dt>Total ({{ $currency }})</dt><dd>{{ number_format((float) $sale->total, 2) }}</dd></div>
                 <div class="flex justify-between"><dt class="text-slate-600">Paid</dt><dd>{{ number_format((float) $sale->amount_paid, 2) }}</dd></div>
                 <div class="flex justify-between font-semibold"><dt>Balance due</dt><dd>{{ number_format((float) $sale->balance(), 2) }}</dd></div>

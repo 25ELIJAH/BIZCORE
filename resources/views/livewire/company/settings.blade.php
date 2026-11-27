@@ -41,6 +41,25 @@
         </section>
 
         <section class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+            <h2 class="text-sm font-semibold">Tax (KRA)</h2>
+            <p class="text-sm text-slate-500">Your KRA PIN prints on every invoice. Switch VAT on if you are VAT-registered: invoices become Tax Invoices, each product's VAT category is applied, and the monthly VAT report appears under Reports.</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="kra_pin" class="mb-1 block text-sm font-medium">KRA PIN</label>
+                    <input id="kra_pin" type="text" wire:model="kra_pin" maxlength="11" placeholder="P051234567A" class="input uppercase">
+                    <p class="mt-1 text-xs text-slate-500">One letter, nine digits, one letter.</p>
+                    @error('kra_pin')<p class="mt-1 text-sm text-red-600">{{ $message === 'The kra pin field format is invalid.' ? 'Use the KRA PIN format: a letter, nine digits and a letter (for example P051234567A).' : $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="vat_rate" class="mb-1 block text-sm font-medium">Standard VAT rate (%)</label>
+                    <input id="vat_rate" type="number" step="0.01" min="0" max="100" wire:model="vat_rate" class="input" @disabled(! $vat_registered)>
+                    @error('vat_rate')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            <x-ui.toggle label="We are registered for VAT" hint="Off means no VAT is charged on sales." wire:model.live="vat_registered" />
+        </section>
+
+        <section class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-sm font-semibold">M-Pesa payments (STK push)</h2>
                 <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $mpesaReady ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $mpesaReady ? 'Ready: Pay with M-Pesa is on' : 'Not set up' }}</span>

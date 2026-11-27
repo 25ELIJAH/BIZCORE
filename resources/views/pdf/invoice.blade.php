@@ -18,6 +18,8 @@
     $footerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="595" height="52" viewBox="0 0 595 52">'
         .'<polygon points="0,30 352,30 343,52 0,52" fill="'.$orange.'"/>'
         .'<polygon points="455,14 595,14 595,52 421,52" fill="'.$navy.'"/></svg>';
+    $vatOn = (bool) $company->setting('vat_registered', false);
+    $codes = ['standard' => 'A', 'zero_rated' => 'Z', 'exempt' => 'E'];
     $uri = fn ($svg) => 'data:image/svg+xml;base64,'.base64_encode($svg);
 @endphp
     <style>
@@ -63,7 +65,7 @@
     @if ($company->registration_number)<div class="sub">Reg. no. {{ $company->registration_number }}</div>@endif
 </div>
 <div class="title">
-    <div class="word">INVOICE</div>
+    <div class="word">{{ $vatOn ? 'TAX INVOICE' : 'INVOICE' }}</div>
     <div class="no">NO : {{ $sale->invoice->invoice_number }}</div>
     <span class="badge" style="background: {{ $label[1] }};">{{ $label[0] }}</span>
 </div>
@@ -80,7 +82,7 @@
                         @if ($sale->customer->address){!! nl2br(e($sale->customer->address)) !!}<br>@endif
                         @if ($sale->customer->phone)Phone : {{ $sale->customer->phone }}<br>@endif
                         @if ($sale->customer->email)Email : {{ $sale->customer->email }}<br>@endif
-                        @if ($sale->customer->tax_number)Tax no. : {{ $sale->customer->tax_number }}@endif
+                        @if ($sale->customer->tax_number)KRA PIN : {{ $sale->customer->tax_number }}@endif
                     </div>
                 @endif
             </td>
@@ -91,6 +93,7 @@
                     @if ($company->address){!! nl2br(e($company->address)) !!}<br>@endif
                     @if ($company->phone)Phone : {{ $company->phone }}<br>@endif
                     @if ($company->email)Email : {{ $company->email }}<br>@endif
+                    @if ($company->setting('kra_pin'))KRA PIN : {{ $company->setting('kra_pin') }}<br>@endif
                     @if ($company->registration_number)Reg. no. : {{ $company->registration_number }}@endif
                 </div>
             </td>
@@ -107,11 +110,12 @@
     </table>
 
     <table class="items" style="margin-top: 12px;">
-        <thead><tr><th style="width: 50%;">Description</th><th class="c">Qty</th><th class="r">Unit price</th><th class="r">Total</th></tr></thead>
+        <thead><tr><th style="width: 46%;">Description</th>@if ($vatOn)<th class="c">VAT</th>@endif<th class="c">Qty</th><th class="r">Unit price</th><th class="r">Total</th></tr></thead>
         <tbody>
         @foreach ($sale->items as $item)
             <tr>
                 <td>{{ $item->product_name }}@if ($item->sku)<br><span class="sku">{{ $item->sku }}</span>@endif</td>
+                @if ($vatOn)<td class="c">{{ $codes[$item->tax_type] ?? 'A' }}</td>@endif
                 <td class="c">{{ $qty($item->quantity) }}</td>
                 <td class="r">{{ $money($item->unit_price) }}</td>
                 <td class="r">{{ $money($item->line_total) }}</td>
@@ -157,7 +161,12 @@
                     @if (bccomp((string) $sale->discount_amount, '0', 2) > 0)
                         <tr><td>Discount{{ $sale->discount_type === 'percent' ? ' ('.rtrim(rtrim($sale->discount_value, '0'), '.').'%)' : '' }}</td><td class="r">&minus; {{ $money($sale->discount_amount) }}</td></tr>
                     @endif
-                    @if (bccomp((string) $sale->tax_rate, '0', 2) > 0)
+                    @if ($vatOn)
+                        <tr><td>A &middot; Taxable ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') ?: '0' }}%)</td><td class="r">{{ $money($sale->vatable_amount) }}</td></tr>
+                        @if (bccomp((string) $sale->zero_rated_amount, '0', 2) > 0)<tr><td>Z &middot; Zero-rated</td><td class="r">{{ $money($sale->zero_rated_amount) }}</td></tr>@endif
+                        @if (bccomp((string) $sale->exempt_amount, '0', 2) > 0)<tr><td>E &middot; Exempt</td><td class="r">{{ $money($sale->exempt_amount) }}</td></tr>@endif
+                        <tr><td>VAT ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') ?: '0' }}%)</td><td class="r">{{ $money($sale->tax_amount) }}</td></tr>
+                    @elseif (bccomp((string) $sale->tax_rate, '0', 2) > 0)
                         <tr><td>Tax ({{ rtrim(rtrim($sale->tax_rate, '0'), '.') }}%)</td><td class="r">{{ $money($sale->tax_amount) }}</td></tr>
                     @endif
                     <tr class="grand"><td>TOTAL</td><td class="r">{{ $money($sale->total) }}</td></tr>

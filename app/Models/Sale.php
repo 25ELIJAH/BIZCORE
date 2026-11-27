@@ -41,6 +41,9 @@ class Sale extends Model
             'discount_amount' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'tax_amount' => 'decimal:2',
+            'vatable_amount' => 'decimal:2',
+            'zero_rated_amount' => 'decimal:2',
+            'exempt_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'amount_paid' => 'decimal:2',
         ];

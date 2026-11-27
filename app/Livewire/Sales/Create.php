@@ -321,6 +321,7 @@ class Create extends Component
             'available' => (string) $product->quantity,
             'quantity' => '1',
             'unit_price' => (string) $product->selling_price,
+            'tax_type' => (string) $product->tax_type,
         ];
         $this->productSearch = '';
         $this->resetErrorBag('lines');
@@ -440,9 +441,14 @@ class Create extends Component
     private function preview(): array
     {
         $subtotal = '0.00';
+        $standard = '0.00'; // the part of the subtotal that carries VAT
         foreach ($this->lines as $line) {
             if (is_numeric($line['quantity']) && is_numeric($line['unit_price'])) {
-                $subtotal = Money::add($subtotal, Money::mul($line['quantity'], Money::round($line['unit_price'])));
+                $amount = Money::mul($line['quantity'], Money::round($line['unit_price']));
+                $subtotal = Money::add($subtotal, $amount);
+                if (($line['tax_type'] ?? 'standard') === 'standard') {
+                    $standard = Money::add($standard, $amount);
+                }
             }
         }
 
@@ -450,7 +456,8 @@ class Create extends Component
         $discount = $this->discountType === 'percent' ? Money::mul($subtotal, bcdiv($value, '100', 6)) : $value;
         $discount = Money::compare($discount, $subtotal) > 0 ? $subtotal : $discount;
         $taxable = Money::sub($subtotal, $discount);
-        $tax = is_numeric($this->taxRate) ? Money::mul($taxable, bcdiv($this->taxRate, '100', 6)) : '0.00';
+        $vatable = bccomp($subtotal, '0', 2) > 0 ? Money::sub($standard, Money::mul($discount, bcdiv($standard, $subtotal, 8))) : '0.00';
+        $tax = is_numeric($this->taxRate) ? Money::mul($vatable, bcdiv($this->taxRate, '100', 6)) : '0.00';
 
         return ['subtotal' => $subtotal, 'discount' => $discount, 'tax' => $tax, 'total' => Money::add($taxable, $tax)];
     }

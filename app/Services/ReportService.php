@@ -33,6 +33,7 @@ class ReportService
         'receivables' => ['title' => 'Customer receivables ageing', 'description' => 'What customers owe, by how overdue it is.', 'permissions' => ['reports.financial.view', 'sales.view'], 'dates' => false],
         'payables' => ['title' => 'Supplier payables', 'description' => 'What the company owes each supplier.', 'permissions' => ['reports.financial.view', 'purchase_orders.view'], 'dates' => false],
         'profit-loss' => ['title' => 'Income and expenses', 'description' => 'Income, expenses and net result by category.', 'permissions' => ['reports.financial.view', 'finance.view'], 'dates' => true],
+        'vat' => ['title' => 'VAT return (KRA)', 'description' => 'Output VAT on sales less input VAT on purchases: the figures for your monthly iTax VAT return.', 'permissions' => ['reports.financial.view', 'sales.view'], 'dates' => true],
         'leave' => ['title' => 'Leave balances', 'description' => 'Annual leave allowance, taken and remaining per employee.', 'permissions' => ['reports.view', 'employees.view'], 'dates' => false],
     ];
 
@@ -65,6 +66,7 @@ class ReportService
             'receivables' => $this->receivables(),
             'payables' => $this->payables(),
             'profit-loss' => $this->profitLoss($from, $to),
+            'vat' => $this->vat($from, $to),
             'leave' => $this->leaveBalances(),
             default => throw new \InvalidArgumentException("Unknown report {$slug}"),
         };
@@ -124,6 +126,36 @@ class ReportService
             'name' => ['Product', 'text'], 'sku' => ['SKU', 'text'], 'qty' => ['Qty sold', 'number'], 'revenue' => ['Revenue', 'money'],
             'cost' => ['Cost', 'money'], 'profit' => ['Gross profit', 'money'], 'margin' => ['Margin', 'text'],
         ], $rows, ['name' => 'Total'] + $t);
+    }
+
+    /** Output VAT (sales) less input VAT (purchases) for a period, laid out like the iTax VAT return. */
+    public function vat(string $from, string $to): array
+    {
+        $sales = Sale::query()->where('status', Sale::STATUS_COMPLETED)
+            ->whereDate('sale_date', '>=', $from)->whereDate('sale_date', '<=', $to)
+            ->selectRaw('COALESCE(SUM(vatable_amount),0) as vatable, COALESCE(SUM(zero_rated_amount),0) as zero_rated, COALESCE(SUM(exempt_amount),0) as exempt, COALESCE(SUM(tax_amount),0) as vat, COUNT(*) as n')
+            ->first();
+
+        $orders = PurchaseOrder::query()->whereIn('status', PurchaseOrder::PAYABLE_STATUSES)
+            ->whereDate('order_date', '>=', $from)->whereDate('order_date', '<=', $to)
+            ->selectRaw('COALESCE(SUM(subtotal),0) as net, COALESCE(SUM(tax_amount),0) as vat, COUNT(*) as n')
+            ->first();
+
+        $output = Money::round((string) $sales->vat);
+        $input = Money::round((string) $orders->vat);
+        $payable = Money::sub($output, $input);
+
+        $rows = [
+            ['section' => 'Sales (output VAT)', 'description' => 'Standard-rated sales', 'net' => Money::round((string) $sales->vatable), 'vat' => $output],
+            ['section' => 'Sales (output VAT)', 'description' => 'Zero-rated sales', 'net' => Money::round((string) $sales->zero_rated), 'vat' => '0.00'],
+            ['section' => 'Sales (output VAT)', 'description' => 'Exempt sales', 'net' => Money::round((string) $sales->exempt), 'vat' => '0.00'],
+            ['section' => 'Sales (output VAT)', 'description' => 'Total output VAT ('.(int) $sales->n.' sale(s))', 'net' => Money::add(Money::add(Money::round((string) $sales->vatable), Money::round((string) $sales->zero_rated)), Money::round((string) $sales->exempt)), 'vat' => $output],
+            ['section' => 'Purchases (input VAT)', 'description' => 'Approved purchase orders ('.(int) $orders->n.')', 'net' => Money::round((string) $orders->net), 'vat' => $input],
+        ];
+
+        return $this->shape('vat', "{$from} to {$to}", [
+            'section' => ['Section', 'text'], 'description' => ['Description', 'text'], 'net' => ['Value excluding VAT', 'money'], 'vat' => ['VAT', 'money'],
+        ], $rows, ['section' => 'VAT payable to KRA (negative = carry forward)', 'vat' => $payable]);
     }
 
     public function inventory(): array

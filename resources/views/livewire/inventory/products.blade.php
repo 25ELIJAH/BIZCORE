@@ -98,6 +98,7 @@
                 <x-ui.field label="Unit" name="form.unit"><input id="form.unit" type="text" wire:model="form.unit" class="input" placeholder="pcs, kg, box"></x-ui.field>
                 <x-ui.field label="Purchase price" name="form.purchase_price"><input id="form.purchase_price" type="number" step="0.01" min="0" wire:model="form.purchase_price" class="input"></x-ui.field>
                 <x-ui.field label="Selling price" name="form.selling_price"><input id="form.selling_price" type="number" step="0.01" min="0" wire:model="form.selling_price" class="input"></x-ui.field>
+                <x-ui.field label="VAT category" name="form.tax_type" hint="How KRA treats this product. Most goods are standard rate."><select id="form.tax_type" wire:model="form.tax_type" class="input">@foreach (\App\Models\Product::TAX_TYPES as $k => $label)<option value="{{ $k }}">{{ $label }}</option>@endforeach</select></x-ui.field>
                 <x-ui.field label="Minimum stock level" name="form.min_stock" hint="Flagged as low stock at or below this quantity."><input id="form.min_stock" type="number" step="0.001" min="0" wire:model="form.min_stock" class="input"></x-ui.field>
                 @unless ($form->id)
                     <x-ui.field label="Opening stock" name="form.opening_quantity" hint="Recorded as an opening stock movement."><input id="form.opening_quantity" type="number" step="0.001" min="0" wire:model="form.opening_quantity" class="input"></x-ui.field>

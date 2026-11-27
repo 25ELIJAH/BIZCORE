@@ -15,10 +15,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `quantity` and `average_cost` are NOT mass-assignable: they change only through
  * App\Services\StockService, which writes the matching stock movement.
  */
-#[Fillable(['product_category_id', 'sku', 'name', 'description', 'unit', 'purchase_price', 'selling_price', 'min_stock', 'is_active'])]
+#[Fillable(['product_category_id', 'sku', 'name', 'description', 'unit', 'purchase_price', 'selling_price', 'tax_type', 'min_stock', 'is_active'])]
 class Product extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
+
+    /** KRA VAT categories: standard rate, zero-rated (0% but still reported) and exempt (outside VAT). */
+    public const TAX_TYPES = ['standard' => 'Standard rate', 'zero_rated' => 'Zero-rated (0%)', 'exempt' => 'Exempt'];
 
     protected function casts(): array
     {

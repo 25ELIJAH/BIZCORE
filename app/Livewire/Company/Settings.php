@@ -7,6 +7,7 @@ use App\Services\ActivityLogger;
 use App\Services\MpesaService;
 use App\Support\Notifier;
 use App\Support\Tenancy\CurrentCompany;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -39,6 +40,13 @@ class Settings extends Component
     public string $invoice_note = '';
 
     public string $notice = '';
+
+    // KRA: the company PIN and whether it charges VAT (the rate is the one new sales start with).
+    public string $kra_pin = '';
+
+    public bool $vat_registered = false;
+
+    public string $vat_rate = '16';
 
     /** @var array<string, bool> event key => send an email too (the bell always gets it) */
     public array $emails = [];
@@ -73,6 +81,10 @@ class Settings extends Component
             $this->{$field} = (string) $company->setting($field, '');
         }
 
+        $this->kra_pin = (string) $company->setting('kra_pin', '');
+        $this->vat_registered = (bool) $company->setting('vat_registered', false);
+        $this->vat_rate = (string) ($this->vat_registered ? $company->setting('tax_rate', 16) : 16);
+
         foreach (array_keys(Notifier::EVENTS) as $event) {
             $this->emails[Notifier::key($event)] = Notifier::emailEnabled($company, $event);
         }
@@ -99,6 +111,9 @@ class Settings extends Component
             'bank_account_number' => ['nullable', 'string', 'max:60'],
             'bank_branch' => ['nullable', 'string', 'max:120'],
             'invoice_note' => ['nullable', 'string', 'max:500'],
+            'kra_pin' => ['nullable', 'regex:/^[AP]\d{9}[A-Z]$/i', Rule::requiredIf($this->vat_registered)],
+            'vat_registered' => ['boolean'],
+            'vat_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'mpesa_environment' => ['required', 'in:sandbox,production'],
             'mpesa_type' => ['required', 'in:paybill,till'],
             'mpesa_shortcode' => ['nullable', 'digits_between:4,10'],
@@ -113,6 +128,10 @@ class Settings extends Component
         foreach (self::SETTING_FIELDS as $field) {
             $settings[$field] = $this->{$field} === '' ? null : $this->{$field};
         }
+
+        $settings['kra_pin'] = $this->kra_pin === '' ? null : strtoupper(trim($this->kra_pin));
+        $settings['vat_registered'] = $this->vat_registered;
+        $settings['tax_rate'] = $this->vat_registered ? $this->vat_rate : 0; // the rate new sales start with
 
         $mpesa = (array) ($settings['mpesa'] ?? []);
         $mpesa['environment'] = $this->mpesa_environment;

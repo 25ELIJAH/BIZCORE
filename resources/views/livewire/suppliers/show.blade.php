@@ -21,7 +21,7 @@
             <div><dt class="text-slate-500">Contact person</dt><dd class="font-medium">{{ $supplier->contact_person ?? '—' }}</dd></div>
             <div><dt class="text-slate-500">Email</dt><dd class="font-medium">{{ $supplier->email ?? '—' }}</dd></div>
             <div><dt class="text-slate-500">Phone</dt><dd class="font-medium">{{ $supplier->phone ?? '—' }}</dd></div>
-            <div><dt class="text-slate-500">Tax / VAT number</dt><dd class="font-medium">{{ $supplier->tax_number ?? '—' }}</dd></div>
+            <div><dt class="text-slate-500">KRA PIN</dt><dd class="font-medium">{{ $supplier->tax_number ?? '—' }}</dd></div>
             <div class="sm:col-span-2"><dt class="text-slate-500">Address</dt><dd class="font-medium">{{ $supplier->address ?? '—' }}</dd></div>
             @if ($supplier->notes)<div class="sm:col-span-3"><dt class="text-slate-500">Notes</dt><dd>{{ $supplier->notes }}</dd></div>@endif
         </dl>
