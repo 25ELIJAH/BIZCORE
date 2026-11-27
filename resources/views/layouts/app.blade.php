@@ -24,6 +24,7 @@
             ['label' => 'Activity', 'icon' => 'attendance', 'route' => 'activity', 'can' => 'activity_logs.view', 'active' => 'activity'],
             ['label' => 'Company', 'icon' => 'categories', 'route' => 'company.settings', 'can' => 'manage-company', 'active' => 'company.settings'],
             ['label' => 'Team', 'icon' => 'employees', 'route' => 'company.team', 'can' => 'manage-company', 'active' => 'company.team'],
+            ['label' => 'Settings', 'icon' => 'admin', 'route' => 'company.appearance', 'can' => 'manage-company', 'active' => 'company.appearance'],
         ],
         'Trade' => [
             ['label' => 'Sales', 'icon' => 'sales', 'route' => 'sales.index', 'can' => 'sales.view', 'active' => 'sales.*'],
@@ -46,6 +47,7 @@
             ['label' => 'Stock movements', 'icon' => 'movements', 'route' => 'inventory.movements', 'can' => 'inventory.view', 'active' => 'inventory.movements'],
         ],
     ];
+    $look = \App\Support\Appearance::for($currentCompany);
     $initials = collect(preg_split('/\s+/', trim(auth()->user()->name)))->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->take(2)->implode('');
 @endphp
 <!DOCTYPE html>
@@ -59,7 +61,8 @@
     {{ Illuminate\Support\Facades\Vite::fonts() }}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="has-shell min-h-screen text-slate-800 antialiased">
+<body class="has-shell min-h-screen text-slate-800 antialiased {{ $look['glass'] ? 'theme-glass' : '' }}"
+      style="--glass-alpha: {{ $look['alpha'] }}; --glass-blur: {{ $look['blur'] }}px; --app-bg: {{ $look['backgroundUrl'] ? "url('".$look['backgroundUrl']."')" : 'none' }};">
 <div id="busy-bar" class="busy-bar" aria-hidden="true"></div>
 <div class="min-h-screen lg:p-6">
 <div class="mx-auto flex min-h-screen max-w-[1500px] flex-col overflow-hidden bg-white lg:min-h-[calc(100vh-3rem)] lg:rounded-[36px] lg:shadow-[var(--shadow-shell)]" id="shell">
@@ -69,7 +72,17 @@
         <label for="nav-toggle" class="cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-brand-soft lg:hidden" aria-label="Toggle navigation">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </label>
-        <a href="{{ route('home') }}" class="shrink-0" aria-label="BIZCORE home"><x-brand /></a>
+        @if ($look['logoUrl'] && $look['showLogo'])
+            <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3" aria-label="{{ $currentCompany->name }} home">
+                <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200"><img src="{{ $look['logoUrl'] }}" alt="" class="h-full w-full object-contain p-0.5"></span>
+                <span class="leading-tight">
+                    <span class="block max-w-[11rem] truncate text-base font-bold text-ink">{{ $currentCompany->name }}</span>
+                    <span class="hidden text-[11px] font-medium text-slate-500 sm:block">Powered by BizCore</span>
+                </span>
+            </a>
+        @else
+            <a href="{{ route('home') }}" class="shrink-0" aria-label="BIZCORE home"><x-brand /></a>
+        @endif
 
         <form method="POST" action="{{ route('company.switch') }}" class="order-last flex w-full basis-full items-center sm:order-none sm:ml-2 sm:w-auto sm:min-w-0 sm:flex-1 sm:basis-auto">
             @csrf

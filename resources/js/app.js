@@ -204,3 +204,13 @@ document.addEventListener('livewire:init', busyBar);
 document.addEventListener('livewire:initialized', () => {
     window.Livewire.hook('morphed', () => { countUp(); toasts(); });
 });
+
+// Settings > Look and feel: restyle the open page the moment a change is saved, without a reload.
+window.addEventListener('appearance-changed', (event) => {
+    const d = event.detail || {};
+    const body = document.body;
+    body.classList.toggle('theme-glass', !!d.glass);
+    body.style.setProperty('--glass-alpha', d.alpha);
+    body.style.setProperty('--glass-blur', d.blur + 'px');
+    body.style.setProperty('--app-bg', d.background ? "url('" + d.background + "')" : 'none');
+});

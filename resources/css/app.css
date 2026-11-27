@@ -350,3 +350,24 @@ body.auth-body { background: var(--auth-bg) center bottom / cover no-repeat fixe
 .mp-ring2 { animation: mp-ring2 2s ease-out infinite; }
 [x-cloak] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .mp-dot, .mp-pulse, .mp-ring2 { animation: none; } }
+
+/* ---- Company background and the see-through (glass) interface -------------------------------------------- */
+body.has-shell {
+    background-image: var(--app-bg, none);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+/* No backdrop-filter on the shell itself: it would trap the pop-up dialogs (position: fixed) inside it. */
+.theme-glass #shell { background-color: rgb(255 255 255 / calc(var(--glass-alpha, 0.55) * 0.7)); }
+.theme-glass main section.bg-white:not(:has([role='dialog'])),
+.theme-glass main .rounded-xl.bg-white:not(:has([role='dialog'])) {
+    background-color: rgb(255 255 255 / var(--glass-alpha, 0.55));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.2);
+    backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.2);
+    border-color: rgb(255 255 255 / 0.55);
+}
+.theme-glass .input, .theme-glass select, .theme-glass textarea { background-color: rgb(255 255 255 / 0.88); }
+.theme-glass header .bg-brand-soft { background-color: rgb(255 255 255 / 0.55); }
+.theme-glass [role='dialog'] .bg-white { background-color: #fff; }

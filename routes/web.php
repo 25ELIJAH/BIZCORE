@@ -67,6 +67,8 @@ Route::middleware('auth')->group(function () {
         Route::get('notifications', \App\Livewire\Notifications\Inbox::class)->name('notifications.index');
         Route::get('company', \App\Livewire\Company\Settings::class)->name('company.settings')->middleware('can:manage-company');
         Route::get('team', \App\Livewire\Company\Team::class)->name('company.team')->middleware('can:manage-company');
+        Route::get('settings', \App\Livewire\Company\Appearance::class)->name('company.appearance')->middleware('can:manage-company');
+        Route::get('company-assets/{kind}', [\App\Http\Controllers\CompanyAssetController::class, 'show'])->name('company.asset');
 
         Route::prefix('inventory')->name('inventory.')->middleware('can:inventory.view')->group(function () {
             Route::get('products', Products::class)->name('products');

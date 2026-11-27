@@ -18,9 +18,17 @@ class InvoicePdf
         return Pdf::loadView('pdf.invoice', [
             'sale' => $sale,
             'company' => $company,
-            'logo' => $this->logoDataUri($company->logo_path),
+            'logo' => $this->uploadedLogo($company) ?? $this->logoDataUri($company->logo_path),
             'methods' => $company->paymentMethods(),
         ]);
+    }
+
+    /** The logo uploaded on the Settings page (kept in the database). */
+    private function uploadedLogo(Company $company): ?string
+    {
+        $asset = \App\Models\CompanyAsset::withoutGlobalScopes()->where('company_id', $company->id)->where('kind', \App\Models\CompanyAsset::LOGO)->first();
+
+        return $asset ? 'data:'.$asset->mime.';base64,'.$asset->data : null;
     }
 
     private function logoDataUri(?string $path): ?string
