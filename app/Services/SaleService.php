@@ -117,7 +117,7 @@ class SaleService
 
             if (! empty($data['payment'])) {
                 $p = $data['payment'];
-                $this->payments->record($sale, $p['amount'], $p['method'], $saleDate, $p['reference'] ?? null, $p['idempotency_key'] ?? null);
+                $this->payments->record($sale, $p['amount'], $p['method'], $saleDate, $p['reference'] ?? null, $p['idempotency_key'] ?? null, $p['details'] ?? []);
             }
 
             return $sale->refresh()->load(['items', 'invoice', 'customer']);

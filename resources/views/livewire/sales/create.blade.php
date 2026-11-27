@@ -92,33 +92,29 @@
 
             @can('payments.record')
                 <section class="rounded-xl border border-slate-200 bg-white p-5">
-                    @php
-                        $paying = $takePayment;
-                        $stkOn = $paying && $payMethod === 'mpesa' && $mpesaReady;
-                        $tile = 'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs font-medium transition-colors';
-                    @endphp
-                    <h2 class="mb-1 font-semibold">How is the customer paying?</h2>
-                    <p class="mb-3 text-xs text-slate-500">Choose one. Leave it on Pay later to invoice now. A smaller amount leaves the invoice partly paid.</p>
-                    <div class="grid grid-cols-3 gap-2" role="group" aria-label="Payment method">
-                        <button type="button" wire:click="payLater" aria-pressed="{{ $paying ? 'false' : 'true' }}" class="{{ $tile }} {{ $paying ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-indigo-600 bg-indigo-50 text-indigo-700' }}">
-                            <x-sales.pay-icon method="later" /> Pay later
-                        </button>
-                        @foreach ($paymentMethods as $slug => $label)
-                            @php($on = $paying && $payMethod === $slug)
-                            <button type="button" wire:click="selectPay('{{ $slug }}')" aria-pressed="{{ $on ? 'true' : 'false' }}" class="{{ $tile }} {{ $on ? ($slug === 'mpesa' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-indigo-600 bg-indigo-50 text-indigo-700') : 'border-slate-200 text-slate-600 hover:bg-slate-50' }}">
-                                <x-sales.pay-icon :method="$slug" /> {{ $label }}
-                            </button>
-                        @endforeach
-                    </div>
+                    <h2 class="mb-1 font-semibold">Payment</h2>
+                    <p class="mb-3 text-xs text-slate-500">Choose how the customer is paying. Leave it empty to invoice now and collect later.</p>
+                    <x-ui.field label="Payment method" name="payMethod">
+                        <select id="payMethod" wire:model.live="payMethod" class="input">
+                            <option value="">Select a payment method</option>
+                            @foreach ($payMethods as $slug => $label)<option value="{{ $slug }}">{{ $label }}</option>@endforeach
+                        </select>
+                    </x-ui.field>
 
-                    @if ($paying)
+                    @if ($payMethod === 'cash')
                         <div class="mt-4 space-y-3">
-                            <x-ui.field label="Amount ({{ $currency }}){{ $stkOn ? ', whole shillings' : '' }}" name="payNow"><input id="payNow" type="number" step="{{ $stkOn ? '1' : '0.01' }}" min="0" wire:model="payNow" class="input"></x-ui.field>
-                            @if ($stkOn)
-                                <x-ui.field label="Customer phone (Safaricom)" name="mpesaPhone" hint="A prompt is sent to this phone when you complete the sale. The payment is recorded automatically once they enter their PIN."><input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input" placeholder="0712 345 678" autocomplete="off"></x-ui.field>
-                            @else
-                                <x-ui.field label="Reference" name="payReference" hint="{{ $payMethod === 'mpesa' ? 'M-Pesa prompts are not set up yet, so enter the receipt number of the payment.' : '' }}"><input id="payReference" type="text" wire:model="payReference" class="input" maxlength="255"></x-ui.field>
+                            <x-ui.field label="Amount received ({{ $currency }})" name="payNow"><input id="payNow" type="number" step="0.01" min="0" wire:model="payNow" class="input"></x-ui.field>
+                            <p class="text-xs text-slate-500">Recorded as cash received from <strong>{{ $customerName }}</strong>.</p>
+                        </div>
+                    @elseif ($payMethod === 'bank_transfer' || ($payMethod === 'mpesa' && ! $mpesaReady))
+                        <div class="mt-4 space-y-3">
+                            <x-ui.field label="Amount received ({{ $currency }})" name="payNow"><input id="payNow" type="number" step="0.01" min="0" wire:model="payNow" class="input"></x-ui.field>
+                            <x-ui.field label="{{ $payMethod === 'mpesa' ? 'M-Pesa code' : 'Transaction code' }}" name="payReference" hint="{{ $payMethod === 'mpesa' ? 'Prompts are not set up yet, so enter the code from the M-Pesa message.' : '' }}"><input id="payReference" type="text" wire:model="payReference" class="input" maxlength="255" autocomplete="off"></x-ui.field>
+                            @if ($payMethod === 'bank_transfer')
+                                <x-ui.field label="Paid by (name)" name="payerName" hint="Leave blank to use {{ $customerName }}."><input id="payerName" type="text" wire:model="payerName" class="input" maxlength="255" placeholder="{{ $customerName }}"></x-ui.field>
+                                <x-ui.field label="Bank" name="payBank"><input id="payBank" type="text" wire:model="payBank" class="input" maxlength="255" placeholder="e.g. Equity Bank"></x-ui.field>
                             @endif
+                            <x-ui.field label="Date and time of payment" name="payTime"><input id="payTime" type="datetime-local" wire:model="payTime" class="input"></x-ui.field>
                         </div>
                     @endif
                 </section>
@@ -129,4 +125,56 @@
             </button>
         </aside>
     </form>
+
+    @if ($showMpesa)
+        <x-ui.modal title="Pay with M-Pesa" close="closeMpesa">
+            @if (! $mpesaTx)
+                <form wire:submit="sendMpesa" class="space-y-4">
+                    <p class="text-sm text-slate-600">Paying: <strong>{{ $customerName }}</strong>. A prompt goes to this phone and the customer enters their M-Pesa PIN.</p>
+                    <x-ui.field label="Recipient phone (Safaricom)" name="mpesaPhone"><input id="mpesaPhone" type="tel" inputmode="tel" wire:model="mpesaPhone" class="input" placeholder="0712 345 678" autofocus autocomplete="off"></x-ui.field>
+                    <x-ui.field label="Amount ({{ $currency }}, whole shillings)" name="mpesaAmount"><input id="mpesaAmount" type="number" step="1" min="1" wire:model="mpesaAmount" class="input"></x-ui.field>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" wire:click="closeMpesa" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="sendMpesa">
+                            <span wire:loading.remove wire:target="sendMpesa">Send payment prompt</span><span wire:loading wire:target="sendMpesa">Sending&hellip;</span>
+                        </button>
+                    </div>
+                </form>
+            @elseif ($mpesaTx->status === 'pending')
+                <div wire:poll.3s="checkMpesa" class="space-y-4 py-4 text-center" aria-live="polite">
+                    <svg class="mx-auto h-12 w-12 animate-spin text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                    <p class="font-semibold text-slate-800">Waiting for payment</p>
+                    <p class="text-sm text-slate-600">A prompt was sent to {{ $mpesaTx->phone }}. Ask the customer to enter their M-Pesa PIN. This updates by itself.</p>
+                    <p class="text-xs text-slate-400">The sale is already saved. You can close this and the payment will still be recorded when it arrives.</p>
+                    <button type="button" wire:click="closeMpesa" class="btn-secondary">Close</button>
+                </div>
+            @elseif ($mpesaTx->status === 'success')
+                <div class="space-y-4 text-center">
+                    <svg class="mx-auto h-14 w-14 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.7 2.7L16 9.8"/></svg>
+                    <p class="text-lg font-semibold text-emerald-700">Payment successful</p>
+                    <dl class="divide-y divide-slate-100 rounded-lg border border-slate-200 text-left text-sm">
+                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Name</dt><dd class="font-medium">{{ $customerName }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">M-Pesa code</dt><dd class="font-mono font-medium">{{ $mpesaTx->mpesa_receipt ?: '—' }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Amount</dt><dd class="font-medium">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Phone</dt><dd>{{ $mpesaTx->phone }}</dd></div>
+                        <div class="flex justify-between gap-4 px-4 py-2"><dt class="text-slate-500">Time</dt><dd>{{ ($mpesaTx->completed_at ?? $mpesaTx->updated_at)->format('d M Y, H:i') }}</dd></div>
+                    </dl>
+                    <p class="text-xs text-slate-500">The payment has been recorded on the sale.</p>
+                    <button type="button" wire:click="goToSale" class="btn-primary">View sale</button>
+                </div>
+            @elseif ($mpesaTx->status === 'needs_review')
+                <div class="space-y-3 text-center">
+                    <p class="text-lg font-semibold text-amber-700">Payment needs review</p>
+                    <p class="text-sm text-slate-600">The customer paid{{ $mpesaTx->mpesa_receipt ? ' (code '.$mpesaTx->mpesa_receipt.')' : '' }} but it could not be added to the sale: {{ $mpesaTx->result_desc }} Please check with an administrator.</p>
+                    <button type="button" wire:click="goToSale" class="btn-secondary">View sale</button>
+                </div>
+            @else
+                <div class="space-y-3 text-center">
+                    <p class="text-lg font-semibold text-red-700">Payment was not completed</p>
+                    <p class="text-sm text-slate-600">{{ $mpesaTx->result_desc ?: 'The customer cancelled or the prompt timed out.' }} Nothing was charged. The sale is saved and unpaid.</p>
+                    <div class="flex justify-center gap-2"><button type="button" wire:click="goToSale" class="btn-secondary">View sale</button><button type="button" wire:click="retryMpesa" class="btn-primary">Try again</button></div>
+                </div>
+            @endif
+        </x-ui.modal>
+    @endif
 </div>

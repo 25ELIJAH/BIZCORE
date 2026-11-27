@@ -5,7 +5,9 @@ namespace App\Livewire\Sales;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Customer;
+use App\Models\MpesaTransaction;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Services\MpesaService;
 use App\Services\SaleService;
 use App\Support\Money;
@@ -24,6 +26,9 @@ use Livewire\Component;
 #[Title('New sale')]
 class Create extends Component
 {
+    /** The only ways to take payment on this screen, in the order they are listed. */
+    private const PAY_METHODS = ['cash', 'mpesa', 'bank_transfer'];
+
     #[Url(as: 'customer')]
     public ?int $customerId = null;
 
@@ -44,17 +49,36 @@ class Create extends Component
 
     public string $productSearch = '';
 
+    // ---- Payment taken while completing the sale ('' = no payment now, the invoice stays open) ----
+
+    public string $payMethod = '';
+
     public string $payNow = '';
 
-    public string $payMethod = 'cash';
-
+    /** Transaction code: the bank reference, or the M-Pesa receipt when prompts are not set up. */
     public string $payReference = '';
 
-    /** The phone that gets the M-Pesa prompt when the sale is completed. */
-    public string $mpesaPhone = '';
+    public string $payerName = '';
+
+    public string $payBank = '';
+
+    public string $payTime = '';
+
+    /** While true the amount follows the sale total as items change; typing an amount stops that. */
+    public bool $payFollowsTotal = true;
 
     /** Makes the optional first payment safe against double submits. */
     public string $paymentKey = '';
+
+    // ---- M-Pesa prompt dialog ----
+
+    public bool $showMpesa = false;
+
+    public string $mpesaPhone = '';
+
+    public string $mpesaAmount = '';
+
+    public ?int $mpesaTxId = null;
 
     public ?int $completedSaleId = null;
 
@@ -65,41 +89,58 @@ class Create extends Component
         $this->saleDate = today()->toDateString();
         $this->taxRate = (string) $company->setting('tax_rate', 0);
         $this->paymentKey = (string) Str::uuid();
-        $this->payMethod = array_key_first($company->paymentMethods());
 
         if ($this->customerId && ! Customer::where('is_active', true)->whereKey($this->customerId)->exists()) {
             $this->customerId = null;
         }
     }
 
-    /** The payment tiles: pick how the customer pays. Picking one fills in the full total to start with. */
-    public function selectPay(string $method, MpesaService $mpesa): void
+    // ---- the payment dropdown ----------------------------------------------------------------------
+
+    /** @return array<string, string> slug => label */
+    private function payMethods(): array
     {
-        $this->authorize('payments.record');
-        $company = app(CurrentCompany::class)->get();
-        abort_unless(array_key_exists($method, $company->paymentMethods()), 422);
-
-        $this->resetValidation(['payNow', 'mpesaPhone']);
-        $this->payMethod = $method;
-        $this->takePayment = true;
-        $this->payFollowsTotal = true;
-        $this->syncPay();
-
-        if ($method === 'mpesa' && $this->mpesaPhone === '' && $this->customerId) {
-            $this->mpesaPhone = (string) (Customer::whereKey($this->customerId)->value('phone') ?? '');
+        $all = app(CurrentCompany::class)->get()->paymentMethods();
+        $out = [];
+        foreach (self::PAY_METHODS as $slug) {
+            if (isset($all[$slug])) {
+                $out[$slug] = $all[$slug];
+            }
         }
+
+        return $out;
     }
 
-    /** True once a payment tile is chosen (even before items are added); false means Pay later. */
-    public bool $takePayment = false;
+    private function mpesaReady(): bool
+    {
+        return app(MpesaService::class)->isConfigured(app(CurrentCompany::class)->get());
+    }
 
-    /** While true the amount follows the sale total as items change; typing an amount stops that. */
-    public bool $payFollowsTotal = true;
+    public function updatedPayMethod(string $value): void
+    {
+        $this->resetValidation(['payMethod', 'payNow', 'payReference', 'mpesaPhone', 'lines']);
+
+        if ($value === '' || ! Gate::allows('payments.record') || ! array_key_exists($value, $this->payMethods())) {
+            $this->payMethod = '';
+            $this->payNow = '';
+
+            return;
+        }
+
+        if ($this->payNow === '') {
+            $this->payFollowsTotal = true;
+        }
+        $this->payTime = now()->format('Y-m-d\TH:i');
+        $this->syncPay();
+
+        if ($value === 'mpesa' && $this->mpesaReady()) {
+            $this->openMpesa();
+        }
+    }
 
     public function updatedPayNow(): void
     {
         $this->payFollowsTotal = false;
-        $this->takePayment = bccomp(is_numeric($this->payNow) ? $this->payNow : '0', '0', 2) > 0 || $this->takePayment;
     }
 
     public function updatedLines(): void
@@ -124,23 +165,119 @@ class Create extends Component
 
     private function syncPay(): void
     {
-        if (! $this->takePayment || ! $this->payFollowsTotal) {
+        if ($this->payMethod === '' || ! $this->payFollowsTotal) {
             return;
         }
 
-        $total = $this->preview()['total'];
-        $stk = $this->payMethod === 'mpesa' && app(MpesaService::class)->isConfigured(app(CurrentCompany::class)->get());
-        // M-Pesa takes whole shillings only.
-        $this->payNow = $stk ? (string) floor((float) $total) : (string) $total;
+        $this->payNow = (string) $this->preview()['total'];
     }
 
-    public function payLater(): void
+    // ---- the M-Pesa dialog -------------------------------------------------------------------------
+
+    private function openMpesa(): void
     {
-        $this->takePayment = false;
-        $this->payNow = '';
-        $this->payReference = '';
-        $this->resetValidation(['payNow', 'mpesaPhone']);
+        $this->authorize('payments.record');
+
+        if (! $this->lines || Money::compare($this->preview()['total'], '1.00') < 0) {
+            $this->addError('payMethod', 'Add the items first, then choose M-Pesa.');
+            $this->payMethod = '';
+            $this->payNow = '';
+
+            return;
+        }
+
+        $this->resetValidation();
+        $this->mpesaAmount = (string) floor((float) $this->preview()['total']);
+        $this->mpesaPhone = $this->mpesaPhone !== '' ? $this->mpesaPhone : (string) ($this->customerId ? Customer::whereKey($this->customerId)->value('phone') : '');
+        $this->mpesaTxId = null;
+        $this->showMpesa = true;
     }
+
+    /** Save the sale (once) and send the prompt for what the customer is paying now. */
+    public function sendMpesa(SaleService $sales, MpesaService $mpesa): void
+    {
+        $this->authorize('sales.create');
+        $this->authorize('payments.record');
+
+        $this->validate([
+            'mpesaPhone' => ['required', 'string', 'max:20'],
+            'mpesaAmount' => ['required', 'numeric', 'min:1'],
+        ], [], ['mpesaPhone' => 'phone number', 'mpesaAmount' => 'amount']);
+
+        if (MpesaService::normalizePhone($this->mpesaPhone) === null) {
+            $this->addError('mpesaPhone', 'Enter a valid Safaricom number, for example 0712 345 678.');
+
+            return;
+        }
+        if (floor((float) $this->mpesaAmount) != (float) $this->mpesaAmount) {
+            $this->addError('mpesaAmount', 'M-Pesa takes whole shillings: no cents.');
+
+            return;
+        }
+
+        $sale = $this->completedSaleId ? Sale::find($this->completedSaleId) : $this->createSale($sales, null);
+        if (! $sale) {
+            $this->showMpesa = false; // the sale form has an error to fix first; it is shown on the page
+
+            return;
+        }
+
+        try {
+            $tx = $mpesa->stkPush($sale, $this->mpesaPhone, $this->mpesaAmount, Auth::user());
+        } catch (BusinessRuleException $e) {
+            $this->addError('mpesaPhone', $e->getMessage()); // the sale is saved; the cashier can fix this and try again
+
+            return;
+        }
+
+        $this->mpesaTxId = $tx->id;
+    }
+
+    /** Polled while the customer is looking at their phone. */
+    public function checkMpesa(MpesaService $mpesa): void
+    {
+        $tx = $this->mpesaTransaction();
+        if ($tx && $tx->isPending()) {
+            $mpesa->checkStatus($tx);
+        }
+    }
+
+    public function retryMpesa(): void
+    {
+        $this->mpesaTxId = null;
+    }
+
+    /** Close the dialog: before anything was sent this just backs out; afterwards the sale exists, so go to it. */
+    public function closeMpesa()
+    {
+        if ($this->completedSaleId) {
+            return $this->goToSale();
+        }
+
+        $this->showMpesa = false;
+        $this->payMethod = '';
+        $this->payNow = '';
+        $this->resetValidation();
+
+        return null;
+    }
+
+    public function goToSale()
+    {
+        $sale = Sale::with('invoice')->findOrFail($this->completedSaleId);
+        session()->flash('status', "Sale {$sale->invoice->invoice_number} recorded.");
+
+        return $this->redirectRoute('sales.show', $sale, navigate: true);
+    }
+
+    private function mpesaTransaction(): ?MpesaTransaction
+    {
+        return $this->mpesaTxId && $this->completedSaleId
+            ? MpesaTransaction::where('company_id', app(CurrentCompany::class)->id())->where('sale_id', $this->completedSaleId)->find($this->mpesaTxId)
+            : null;
+    }
+
+    // ---- items -------------------------------------------------------------------------------------
 
     public function addProduct(int $productId): void
     {
@@ -181,14 +318,48 @@ class Create extends Component
         $this->syncPay();
     }
 
-    public function save(SaleService $sales, MpesaService $mpesa)
+    // ---- saving ------------------------------------------------------------------------------------
+
+    public function save(SaleService $sales)
     {
         $this->authorize('sales.create');
 
         if ($this->completedSaleId) {
-            return $this->redirectRoute('sales.show', $this->completedSaleId, navigate: true);
+            return $this->goToSale();
         }
 
+        $takingPayment = Gate::allows('payments.record') && $this->payMethod !== '';
+
+        // M-Pesa with prompts set up is done in its own dialog.
+        if ($takingPayment && $this->payMethod === 'mpesa' && $this->mpesaReady()) {
+            $this->openMpesa();
+
+            return null;
+        }
+
+        $payment = null;
+        if ($takingPayment) {
+            if (! is_numeric($this->payNow) || Money::compare(Money::round($this->payNow), '0.00') <= 0) {
+                $this->addError('payNow', 'Enter the amount received.');
+
+                return null;
+            }
+            if ($this->payMethod !== 'cash' && trim($this->payReference) === '') {
+                $this->addError('payReference', $this->payMethod === 'mpesa' ? 'Enter the M-Pesa code from the message.' : 'Enter the transaction code from the bank.');
+
+                return null;
+            }
+            $payment = ['amount' => $this->payNow, 'method' => $this->payMethod, 'reference' => $this->payReference ?: null, 'idempotency_key' => $this->paymentKey];
+        }
+
+        $sale = $this->createSale($sales, $payment);
+
+        return $sale ? $this->goToSale() : null;
+    }
+
+    /** Validate the form and save the sale (and, when given, its first payment). Returns null after showing the problem. */
+    private function createSale(SaleService $sales, ?array $payment): ?Sale
+    {
         $companyId = app(CurrentCompany::class)->id();
         $this->validate([
             'customerId' => ['nullable', Rule::exists('customers', 'id')->where('company_id', $companyId)->whereNull('deleted_at')],
@@ -201,37 +372,23 @@ class Create extends Component
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'max:999999999999.999'],
             'lines.*.unit_price' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
-            'payNow' => ['nullable', 'numeric', 'min:0'],
+            'payerName' => ['nullable', 'string', 'max:255'],
+            'payBank' => ['nullable', 'string', 'max:255'],
+            'payTime' => ['nullable', 'date'],
             'payReference' => ['nullable', 'string', 'max:255'],
         ], [
             'lines.required' => 'Add at least one product to the sale.',
             'lines.min' => 'Add at least one product to the sale.',
-        ], ['lines.*.quantity' => 'quantity', 'lines.*.unit_price' => 'unit price']);
+        ], ['lines.*.quantity' => 'quantity', 'lines.*.unit_price' => 'unit price', 'payTime' => 'payment time']);
 
-        // Paying by M-Pesa: the prompt is sent after the sale is saved. Check what we can first, so a typo in
-        // the phone number does not leave a sale behind with no payment.
-        $company = app(CurrentCompany::class)->get();
-        $takingPayment = Gate::allows('payments.record') && $this->takePayment && bccomp($this->payNow ?: '0', '0', 2) > 0;
-        $stk = $takingPayment && $this->payMethod === 'mpesa' && $mpesa->isConfigured($company);
-
-        if ($stk) {
-            $phone = $this->mpesaPhone !== '' ? $this->mpesaPhone : (string) ($this->customerId ? Customer::whereKey($this->customerId)->value('phone') : '');
-
-            if (MpesaService::normalizePhone($phone) === null) {
-                $this->addError('mpesaPhone', 'Enter the customer\'s Safaricom number, for example 0712 345 678.');
-
-                return null;
-            }
-            if ((float) $this->payNow < 1 || floor((float) $this->payNow) != (float) $this->payNow) {
-                $this->addError('payNow', 'M-Pesa takes whole shillings: enter an amount of 1 or more with no cents.');
-
-                return null;
-            }
-            if (Money::compare(Money::round($this->payNow), $this->preview()['total']) > 0) {
-                $this->addError('payNow', 'The amount is more than the sale total.');
-
-                return null;
-            }
+        if ($payment) {
+            // Who paid: the name typed for a bank payment, otherwise the customer on the sale.
+            $customerName = $this->customerId ? Customer::whereKey($this->customerId)->value('name') : null;
+            $payment['details'] = [
+                'payer_name' => $this->payMethod === 'bank_transfer' && trim($this->payerName) !== '' ? trim($this->payerName) : $customerName,
+                'bank_name' => $this->payMethod === 'bank_transfer' ? trim($this->payBank) : null,
+                'transacted_at' => $this->payMethod === 'cash' || $this->payTime === '' ? now() : $this->payTime,
+            ];
         }
 
         try {
@@ -244,10 +401,7 @@ class Create extends Component
                 'discount_value' => $this->discountValue,
                 'tax_rate' => $this->taxRate,
                 'items' => array_map(fn ($l) => Arr::only($l, ['product_id', 'quantity', 'unit_price']), $this->lines),
-                // Taking money needs its own permission; ignore the field for users who lack it.
-                'payment' => $takingPayment && ! $stk
-                    ? ['amount' => $this->payNow, 'method' => $this->payMethod, 'reference' => $this->payReference ?: null, 'idempotency_key' => $this->paymentKey]
-                    : null,
+                'payment' => $payment,
             ]);
         } catch (InsufficientStockException $e) {
             $this->addError('lines', $e->getMessage());
@@ -260,20 +414,8 @@ class Create extends Component
         }
 
         $this->completedSaleId = $sale->id;
-        session()->flash('status', "Sale {$sale->invoice->invoice_number} recorded.");
 
-        if ($stk) {
-            try {
-                $tx = $mpesa->stkPush($sale, $phone, $this->payNow, Auth::user());
-
-                return $this->redirectRoute('sales.show', ['sale' => $sale, 'mpesa' => $tx->id], navigate: true);
-            } catch (BusinessRuleException $e) {
-                // The sale is safe; only the prompt failed. Say so, and the cashier can try again from the sale.
-                session()->flash('status', "Sale {$sale->invoice->invoice_number} recorded, but the M-Pesa prompt was not sent: {$e->getMessage()} Use Pay with M-Pesa on this page to try again.");
-            }
-        }
-
-        return $this->redirectRoute('sales.show', $sale, navigate: true);
+        return $sale;
     }
 
     /** Display-only preview. The saved figures are always recalculated by SaleService. */
@@ -303,13 +445,16 @@ class Create extends Component
             ->orderBy('name')->limit(8)->get();
 
         $company = app(CurrentCompany::class)->get();
+        $customer = $this->customerId ? Customer::whereKey($this->customerId)->first(['id', 'name']) : null;
 
         return view('livewire.sales.create', [
             'customers' => Customer::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'results' => $results,
             'totals' => $this->preview(),
-            'paymentMethods' => $company->paymentMethods(),
-            'mpesaReady' => app(MpesaService::class)->isConfigured($company),
+            'payMethods' => $this->payMethods(),
+            'mpesaReady' => $this->mpesaReady(),
+            'mpesaTx' => $this->showMpesa ? $this->mpesaTransaction() : null,
+            'customerName' => $customer?->name ?? 'Walk-in customer',
             'currency' => $company->currency,
             'allowNegative' => (bool) $company->setting('allow_negative_stock', false),
         ]);

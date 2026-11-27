@@ -19,9 +19,9 @@ class PaymentService
      * Record a customer payment. Partial payments are supported; overpayment is refused.
      * Passing the same $idempotencyKey twice returns the first payment instead of recording a duplicate.
      */
-    public function record(Sale $sale, string|int|float $amount, string $method, CarbonInterface|string|null $paidAt = null, ?string $reference = null, ?string $idempotencyKey = null): Payment
+    public function record(Sale $sale, string|int|float $amount, string $method, CarbonInterface|string|null $paidAt = null, ?string $reference = null, ?string $idempotencyKey = null, array $details = []): Payment
     {
-        return DB::transaction(function () use ($sale, $amount, $method, $paidAt, $reference, $idempotencyKey) {
+        return DB::transaction(function () use ($sale, $amount, $method, $paidAt, $reference, $idempotencyKey, $details) {
             $locked = Sale::query()->lockForUpdate()->findOrFail($sale->getKey());
 
             if ($idempotencyKey !== null && ($existing = Payment::where('idempotency_key', $idempotencyKey)->first())) {
@@ -57,6 +57,9 @@ class PaymentService
                 'method' => $method,
                 'paid_at' => $paidAt ?? today(),
                 'reference' => $reference,
+                'payer_name' => ($details['payer_name'] ?? null) ?: null,
+                'bank_name' => ($details['bank_name'] ?? null) ?: null,
+                'transacted_at' => ! empty($details['transacted_at']) ? $details['transacted_at'] : null,
                 'idempotency_key' => $idempotencyKey,
             ]);
             $payment->save();

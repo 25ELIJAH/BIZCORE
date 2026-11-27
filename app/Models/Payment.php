@@ -16,7 +16,7 @@ class Payment extends Model
 
     protected function casts(): array
     {
-        return ['amount' => 'decimal:2', 'paid_at' => 'date', 'voided_at' => 'datetime'];
+        return ['amount' => 'decimal:2', 'paid_at' => 'date', 'voided_at' => 'datetime', 'transacted_at' => 'datetime'];
     }
 
     public function sale(): BelongsTo

@@ -253,92 +253,116 @@ class MpesaTest extends TestCase
     }
 
 
-    public function test_every_payment_tile_records_the_payment_with_method_reference_user_and_an_audit_entry(): void
+    public function test_the_dropdown_offers_only_cash_mpesa_and_bank_transfer(): void
     {
-        $this->company->forceFill(['settings' => []])->save();
-        config(['bizcore.mpesa.consumer_key' => null]);
-
-        foreach (array_keys($this->company->fresh()->paymentMethods()) as $slug) {
-            $this->newSaleForm()->call('selectPay', $slug)->assertSet('payMethod', $slug)
-                ->set('payNow', '400')->set('payReference', "REF-$slug")->call('save')->assertHasNoErrors();
-
-            $sale = Sale::latest('id')->first();
-            $payment = $sale->payments()->first();
-            $this->assertNotNull($payment, "$slug recorded no payment");
-            $this->assertSame($slug, $payment->method);
-            $this->assertSame('400.00', (string) $payment->amount);
-            $this->assertSame("REF-$slug", $payment->reference);
-            $this->assertNotNull($payment->user_id, "$slug payment has no recorded user");
-            $this->assertSame('partial', $sale->payment_status, "$slug part payment should leave the sale part-paid");
-            $this->assertSame('600.00', $sale->balance());
-            $this->assertDatabaseHas('activity_logs', ['action' => 'payment.recorded', 'subject_id' => $payment->id]);
-        }
+        $this->newSaleForm()->assertSee('Select a payment method')->assertSee('Cash')->assertSee('M-Pesa')->assertSee('Bank transfer')
+            ->assertDontSee('Cheque')->assertDontSee('Pay later')->assertDontSee('>Card<', false);
     }
 
-    public function test_choosing_mpesa_on_the_new_sale_screen_sends_the_prompt_when_the_sale_is_completed(): void
+    public function test_cash_asks_only_for_the_amount_and_records_it_against_the_client(): void
     {
-        $this->fakeDaraja();
-
-        $form = $this->newSaleForm()->call('selectPay', 'mpesa')
-            ->assertSet('payMethod', 'mpesa')->assertSet('payNow', '1000')->assertSet('mpesaPhone', '0712345678')
-            ->assertSee('Customer phone');
+        $form = $this->newSaleForm()->set('payMethod', 'cash')->assertSet('payNow', '1000.00')->assertDontSee('Transaction code');
         $form->call('save')->assertHasNoErrors();
 
         $sale = Sale::latest('id')->first();
-        $tx = MpesaTransaction::where('sale_id', $sale->id)->first();
-        $this->assertNotNull($tx);
-        $this->assertSame('pending', $tx->status);
-        $this->assertCount(0, $sale->payments()->get(), 'nothing is recorded until the customer pays');
-        $form->assertRedirect(route('sales.show', ['sale' => $sale, 'mpesa' => $tx->id]));
-
-        // The sale page opens straight into the waiting screen, and the callback completes it.
-        Livewire::withQueryParams(['mpesa' => $tx->id])->test(Show::class, ['sale' => $sale])->assertSet('showMpesa', true)->assertSee('Prompt sent to');
-        $this->hitCallback($tx)->assertOk();
-        $this->assertSame('paid', $sale->fresh()->payment_status);
+        $payment = $sale->payments()->first();
+        $this->assertSame('cash', $payment->method);
+        $this->assertSame($sale->customer->name, $payment->payer_name);
+        $this->assertNotNull($payment->transacted_at);
+        $this->assertSame('paid', $sale->payment_status);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'payment.recorded', 'subject_id' => $payment->id]);
     }
 
-    public function test_a_bad_phone_on_the_new_sale_screen_stops_before_any_sale_is_saved(): void
+    public function test_bank_transfer_keeps_the_code_name_bank_and_time(): void
+    {
+        $this->newSaleForm()->set('payMethod', 'bank_transfer')->assertSee('Bank')->assertSee('Transaction code')
+            ->set('payNow', '400')->call('save')->assertHasErrors('payReference'); // a code is needed for a bank payment
+
+        $this->newSaleForm()->set('payMethod', 'bank_transfer')->set('payNow', '400')->set('payReference', 'FT26331ABCD')
+            ->set('payerName', 'Jane Wanjiru')->set('payBank', 'Equity Bank')->set('payTime', '2026-11-27T14:35')
+            ->call('save')->assertHasNoErrors();
+
+        $sale = Sale::latest('id')->first();
+        $payment = $sale->payments()->first();
+        $this->assertSame('bank_transfer', $payment->method);
+        $this->assertSame('FT26331ABCD', $payment->reference);
+        $this->assertSame('Jane Wanjiru', $payment->payer_name);
+        $this->assertSame('Equity Bank', $payment->bank_name);
+        $this->assertSame('2026-11-27 14:35', $payment->transacted_at->format('Y-m-d H:i'));
+        $this->assertSame('partial', $sale->payment_status);
+        $this->assertSame('600.00', $sale->balance());
+    }
+
+    public function test_no_method_chosen_leaves_the_invoice_open(): void
+    {
+        $this->newSaleForm()->call('save')->assertHasNoErrors();
+
+        $sale = Sale::latest('id')->first();
+        $this->assertCount(0, $sale->payments()->get());
+        $this->assertSame('unpaid', $sale->payment_status);
+    }
+
+    public function test_choosing_mpesa_opens_a_dialog_and_sends_the_prompt_then_shows_the_result(): void
     {
         $this->fakeDaraja();
+
+        $form = $this->newSaleForm()->set('payMethod', 'mpesa')
+            ->assertSet('showMpesa', true)->assertSet('mpesaAmount', '1000')->assertSet('mpesaPhone', '0712345678')
+            ->assertSee('Send payment prompt');
+        $this->assertSame(0, MpesaTransaction::count()); // nothing is sent until the button is pressed
+
+        $form->call('sendMpesa')->assertHasNoErrors()->assertSee('Waiting for payment');
+
+        $sale = Sale::latest('id')->first();
+        $tx = MpesaTransaction::where('sale_id', $sale->id)->first();
+        $this->assertSame('pending', $tx->status);
+        $this->assertCount(0, $sale->payments()->get(), 'nothing is recorded until the customer pays');
+
+        $this->hitCallback($tx)->assertOk();
+        $form->call('checkMpesa')->assertSee('Payment successful')->assertSee($sale->customer->name)->assertSee('QWE123XYZ');
+
+        $payment = $sale->fresh()->payments()->first();
+        $this->assertSame('mpesa', $payment->method);
+        $this->assertSame('QWE123XYZ', $payment->reference);
+        $this->assertSame($sale->customer->name, $payment->payer_name);
+        $this->assertNotNull($payment->transacted_at);
+        $this->assertSame('paid', $sale->fresh()->payment_status);
+
+        $form->call('goToSale')->assertRedirect(route('sales.show', $sale));
+    }
+
+    public function test_mpesa_needs_items_first_and_a_valid_phone_before_anything_is_sent(): void
+    {
+        $this->fakeDaraja();
+
+        Livewire::test(\App\Livewire\Sales\Create::class)->set('payMethod', 'mpesa')->assertSet('showMpesa', false)->assertSet('payMethod', '')->assertHasErrors('payMethod');
+
         $before = Sale::count();
-
-        $this->newSaleForm('')->call('selectPay', 'mpesa')->set('mpesaPhone', '07123')->call('save')->assertHasErrors('mpesaPhone');
-
+        $this->newSaleForm('')->set('payMethod', 'mpesa')->set('mpesaPhone', '07123')->call('sendMpesa')->assertHasErrors('mpesaPhone');
         $this->assertSame($before, Sale::count());
         $this->assertSame(0, MpesaTransaction::count());
     }
 
-    public function test_if_the_prompt_cannot_be_sent_the_sale_is_still_saved_with_a_clear_message(): void
+    public function test_if_the_prompt_cannot_be_sent_the_sale_is_still_saved_and_can_be_retried(): void
     {
         $this->fakeDaraja(['errorMessage' => 'Bad Request - Invalid Amount', 'requestId' => 'x']);
         $before = Sale::count();
 
-        $this->newSaleForm()->call('selectPay', 'mpesa')->call('save')->assertHasNoErrors();
+        $form = $this->newSaleForm()->set('payMethod', 'mpesa')->call('sendMpesa')->assertHasErrors('mpesaPhone')->assertSee('Send payment prompt');
 
         $this->assertSame($before + 1, Sale::count());
-        $this->assertStringContainsString('prompt was not sent', session('status'));
-        $this->assertSame('failed', MpesaTransaction::first()->status);
-    }
-
-    public function test_cash_and_pay_later_still_work_from_the_same_tiles(): void
-    {
-        $cash = $this->newSaleForm()->call('selectPay', 'cash')->assertSet('payNow', '1000.00');
-        $cash->call('save')->assertHasNoErrors();
-        $paid = Sale::latest('id')->first();
-        $this->assertSame('cash', $paid->payments()->first()->method);
-        $this->assertSame('paid', $paid->payment_status);
-
-        $later = $this->newSaleForm()->call('selectPay', 'cash')->call('payLater')->assertSet('payNow', '');
-        $later->call('save')->assertHasNoErrors();
         $this->assertCount(0, Sale::latest('id')->first()->payments()->get());
+
+        $form->call('sendMpesa');
+        $this->assertSame($before + 1, Sale::count(), 'retrying never saves the sale twice');
     }
 
-    public function test_without_mpesa_details_the_tile_asks_for_a_receipt_number_instead_of_a_prompt(): void
+    public function test_without_mpesa_details_it_asks_for_the_code_from_the_message_instead_of_a_prompt(): void
     {
         $this->company->forceFill(['settings' => []])->save();
         config(['bizcore.mpesa.consumer_key' => null]);
 
-        $this->newSaleForm()->call('selectPay', 'mpesa')->assertDontSee('Customer phone')->assertSee('receipt number')
+        $this->newSaleForm()->set('payMethod', 'mpesa')->assertSet('showMpesa', false)->assertSee('M-Pesa code')
             ->set('payReference', 'RCP123')->call('save')->assertHasNoErrors();
 
         $payment = Sale::latest('id')->first()->payments()->first();

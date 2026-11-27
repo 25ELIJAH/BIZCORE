@@ -67,7 +67,7 @@
                     <div wire:key="pay-{{ $payment->id }}" class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 py-3 text-sm first:border-t-0">
                         <div>
                             <span class="font-medium {{ $payment->isVoided() ? 'text-slate-400 line-through' : '' }}">{{ $currency }} {{ number_format((float) $payment->amount, 2) }}</span>
-                            <span class="text-slate-500">· {{ $paymentMethods[$payment->method] ?? $payment->method }} · {{ $payment->paid_at->format('d M Y') }}@if ($payment->reference) · {{ $payment->reference }}@endif</span>
+                            <span class="text-slate-500">· {{ $paymentMethods[$payment->method] ?? $payment->method }} · {{ ($payment->transacted_at ?? $payment->paid_at)->format($payment->transacted_at ? 'd M Y, H:i' : 'd M Y') }}@if ($payment->reference) · {{ $payment->reference }}@endif @if ($payment->payer_name) · from {{ $payment->payer_name }}@endif @if ($payment->bank_name) · {{ $payment->bank_name }}@endif</span>
                             @if ($payment->isVoided())<span class="badge ml-1 bg-slate-200 text-slate-700">Voided: {{ $payment->void_reason }}</span>@endif
                         </div>
                         @if (! $payment->isVoided())

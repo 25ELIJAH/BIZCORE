@@ -285,7 +285,10 @@ class MpesaService
                 }
 
                 $sale = Sale::findOrFail($tx->sale_id);
-                $payment = $this->payments->record($sale, $amount, 'mpesa', today(), $receipt, 'mpesa:'.($tx->checkout_request_id ?: $tx->uuid));
+                $payment = $this->payments->record($sale, $amount, 'mpesa', today(), $receipt, 'mpesa:'.($tx->checkout_request_id ?: $tx->uuid), [
+                    'payer_name' => $sale->customer?->name,
+                    'transacted_at' => now(),
+                ]);
                 $tx->forceFill(['status' => MpesaTransaction::SUCCESS, 'payment_id' => $payment->id])->save();
             });
         } catch (BusinessRuleException $e) {
