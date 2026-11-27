@@ -128,6 +128,7 @@
 
     @if ($showMpesa)
         <x-ui.modal title="M-Pesa payment" close="closeMpesa" maxWidth="max-w-md">
+            @if (! $mpesaTx)
             {{-- Amount banner, shown in every step --}}
             <div class="-mx-5 -mt-4 mb-5 flex items-center gap-3 bg-emerald-600 px-5 py-4 text-white">
                 <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white/20">
@@ -138,6 +139,7 @@
                     <p class="truncate text-2xl font-semibold">{{ $currency }} {{ number_format((float) ($mpesaTx->amount ?? ($mpesaAmount !== '' ? $mpesaAmount : 0)), 2) }}</p>
                 </div>
             </div>
+            @endif
 
             @if (! $mpesaTx)
                 <form wire:submit="sendMpesa" class="space-y-4">
@@ -167,26 +169,54 @@
                     </div>
                 </form>
             @elseif ($mpesaTx->status === 'pending')
-                <div wire:poll.3s="checkMpesa" class="space-y-4 py-2 text-center" aria-live="polite">
-                    <svg class="mx-auto h-14 w-14 animate-spin text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-                    <p class="text-lg font-semibold text-slate-800">Waiting for payment</p>
-                    <p class="text-sm text-slate-600">A prompt was sent to <strong>{{ $mpesaTx->phone }}</strong>. Ask {{ $customerName === 'Walk-in customer' ? 'the customer' : $customerName }} to enter their M-Pesa PIN.</p>
-                    <p class="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">The sale is already saved. If you close this, the payment is still recorded when it arrives.</p>
-                    <button type="button" wire:click="closeMpesa" class="btn-secondary">Close</button>
+                <div wire:poll.3s="checkMpesa" class="space-y-3 px-2 pb-2 pt-4 text-center" aria-live="polite">
+                    <div class="relative mx-auto h-28 w-44 overflow-hidden">
+                        <svg class="absolute inset-0 h-full w-full" viewBox="0 0 176 112" fill="none" aria-hidden="true">
+                            <g class="mp-fly">
+                                <path d="M54 44 28 52M48 62 22 72M60 78 40 92" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" class="mp-streak"/>
+                                <path d="M130 20 66 42l18 13z" fill="#16a34a"/>
+                                <path d="M130 20 84 55l-5 26z" fill="#15803d"/>
+                                <path d="M84 55l-5 26 21-19z" fill="#14532d"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <p class="text-xl font-semibold text-slate-900">Processing&hellip;</p>
+                    <p class="text-sm text-slate-500">Your M-Pesa prompt is on <strong class="text-slate-700">{{ $mpesaTx->phone }}</strong>.<br>Ask {{ $customerName === 'Walk-in customer' ? 'the customer' : $customerName }} to enter their PIN.</p>
+                    <div class="mx-auto flex max-w-xs items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm">
+                        <span class="text-slate-500">Amount</span><span class="font-semibold">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">The sale is already saved. If you close this, the payment is still recorded when it arrives.</p>
+                    <button type="button" wire:click="closeMpesa" class="rounded-full bg-slate-100 px-6 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200">Close</button>
                 </div>
             @elseif ($mpesaTx->status === 'success')
-                <div class="space-y-4 text-center">
-                    <svg class="mx-auto h-16 w-16 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.7 2.7L16 9.8"/></svg>
-                    <p class="text-lg font-semibold text-emerald-700">Payment successful</p>
-                    <dl class="divide-y divide-slate-100 rounded-lg border border-slate-200 text-left text-sm">
-                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Name</dt><dd class="font-medium">{{ $customerName }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">M-Pesa code</dt><dd class="font-mono font-semibold tracking-wide">{{ $mpesaTx->mpesa_receipt ?: '—' }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Amount</dt><dd class="font-medium">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Phone</dt><dd>{{ $mpesaTx->phone }}</dd></div>
-                        <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-slate-500">Time</dt><dd>{{ ($mpesaTx->completed_at ?? $mpesaTx->updated_at)->format('d M Y, H:i') }}</dd></div>
+                <div class="space-y-3 px-2 pb-2 pt-4 text-center">
+                    <svg class="mx-auto h-28 w-28 overflow-visible" viewBox="0 0 100 100" aria-hidden="true">
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#16a34a" stroke-width="2" class="mp-ring"/>
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#16a34a" stroke-width="2" class="mp-ring" style="animation-delay:.25s"/>
+                        <g class="mp-spark">
+                            @foreach ([[0, -1], [0.87, -0.5], [0.87, 0.5], [0, 1], [-0.87, 0.5], [-0.87, -0.5]] as $i => [$dx, $dy])
+                                <circle cx="50" cy="50" r="3" fill="{{ $i % 2 ? '#86efac' : '#16a34a' }}" style="--dx: {{ $dx * 54 }}px; --dy: {{ $dy * 54 }}px; animation-delay: {{ .3 + $i * .03 }}s"/>
+                            @endforeach
+                        </g>
+                        <g class="mp-pop" style="transform-origin: 50px 50px">
+                            <g fill="#16a34a">
+                                <rect x="14" y="14" width="72" height="72" rx="22"/>
+                                <rect x="14" y="14" width="72" height="72" rx="22" transform="rotate(30 50 50)"/>
+                                <rect x="14" y="14" width="72" height="72" rx="22" transform="rotate(60 50 50)"/>
+                            </g>
+                            <path d="M33 52l11 11 23-25" pathLength="1" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" class="mp-draw"/>
+                        </g>
+                    </svg>
+                    <p style="animation-delay: .35s" class="mp-rise text-xl font-semibold text-slate-900">Success!</p>
+                    <p style="animation-delay: .45s" class="mp-rise text-sm text-slate-500">The payment was received and recorded.</p>
+                    <dl class="divide-y divide-slate-100 rounded-xl bg-slate-50 text-left text-sm">
+                        <div class="mp-rise flex justify-between gap-4 px-4 py-2.5" style="animation-delay: 0.6s"><dt class="text-slate-500">Name</dt><dd class="font-medium">{{ $customerName }}</dd></div>
+                        <div class="mp-rise flex justify-between gap-4 px-4 py-2.5" style="animation-delay: 0.68s"><dt class="text-slate-500">M-Pesa code</dt><dd class="font-mono font-semibold tracking-wide">{{ $mpesaTx->mpesa_receipt ?: '—' }}</dd></div>
+                        <div class="mp-rise flex justify-between gap-4 px-4 py-2.5" style="animation-delay: 0.76s"><dt class="text-slate-500">Amount</dt><dd class="font-semibold text-emerald-700">{{ $currency }} {{ number_format((float) $mpesaTx->amount, 2) }}</dd></div>
+                        <div class="mp-rise flex justify-between gap-4 px-4 py-2.5" style="animation-delay: 0.84s"><dt class="text-slate-500">Phone</dt><dd>{{ $mpesaTx->phone }}</dd></div>
+                        <div class="mp-rise flex justify-between gap-4 px-4 py-2.5" style="animation-delay: 0.92s"><dt class="text-slate-500">Time</dt><dd>{{ ($mpesaTx->completed_at ?? $mpesaTx->updated_at)->format('d M Y, H:i') }}</dd></div>
                     </dl>
-                    <p class="text-xs text-slate-500">The payment has been recorded on the sale.</p>
-                    <button type="button" wire:click="goToSale" class="btn-primary w-full">View sale</button>
+                    <button type="button" wire:click="goToSale" style="animation-delay: 1.05s" class="mp-rise w-full rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800">View sale</button>
                 </div>
             @elseif ($mpesaTx->status === 'needs_review')
                 <div class="space-y-3 text-center">
