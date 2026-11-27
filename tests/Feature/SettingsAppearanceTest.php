@@ -97,9 +97,9 @@ class SettingsAppearanceTest extends TestCase
         $look = Look::for(Company::find($this->company->id));
         $this->assertTrue($look['glass']);
         $this->assertSame(80, $look['level']);
-        $this->assertSame('0.400', $look['alpha']);
+        $this->assertSame('0.520', $look['alpha']);
 
-        $this->get(route('home'))->assertSee('theme-glass', false)->assertSee('--glass-alpha: 0.400', false)->assertSee('auth-bg.svg', false);
+        $this->get(route('home'))->assertSee('theme-glass', false)->assertSee('--glass-alpha: 0.520', false)->assertSee('auth-bg.svg', false);
 
         $page->set('glass', false);
         $this->get(route('home'))->assertDontSee('theme-glass', false);

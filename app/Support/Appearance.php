@@ -44,7 +44,7 @@ class Appearance
         return [
             'glass' => (bool) ($saved['glass'] ?? false),
             'level' => $level,
-            'alpha' => number_format(1 - $level * 0.0075, 3, '.', ''),
+            'alpha' => number_format(1 - $level * 0.006, 3, '.', ''),
             'blur' => (int) round(4 + $level * 0.16),
             'background' => $background,
             'backgroundUrl' => self::backgroundUrl($background, $assets->get(CompanyAsset::BACKGROUND)?->updated_at?->timestamp),

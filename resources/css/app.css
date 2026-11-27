@@ -360,7 +360,7 @@ body.has-shell {
     background-repeat: no-repeat;
 }
 /* No backdrop-filter on the shell itself: it would trap the pop-up dialogs (position: fixed) inside it. */
-.theme-glass #shell { background-color: rgb(255 255 255 / calc(var(--glass-alpha, 0.55) * 0.7)); }
+.theme-glass #shell { background-color: rgb(255 255 255 / max(0.62, calc(var(--glass-alpha, 0.55) * 0.8))); }
 .theme-glass main section.bg-white:not(:has([role='dialog'])),
 .theme-glass main .rounded-xl.bg-white:not(:has([role='dialog'])) {
     background-color: rgb(255 255 255 / var(--glass-alpha, 0.55));
